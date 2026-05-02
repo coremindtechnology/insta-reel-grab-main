@@ -67,23 +67,34 @@ function isInstagramUrl(value: string) {
 
 // ------------------ SCRAPER ------------------
 async function resolveInstagramMedia(url: string) {
-  const shortcode = new URL(url).pathname.split("/").filter(Boolean)[1] || "media";
+  // More robust shortcode extraction
+  const shortcodeMatch = url.match(/\/(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
+  const shortcode = shortcodeMatch ? shortcodeMatch[1] : "media";
   const title = `Instagram Reel ${shortcode}`;
 
+  const fetchWithFallback = async (targetUrl: string, customHeaders = {}) => {
+    try {
+      const { data } = await axios.get(targetUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          ...customHeaders
+        },
+        timeout: 8000
+      });
+      return data;
+    } catch (e) {
+      return null;
+    }
+  };
+
   try {
-    const { data: html } = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://www.instagram.com/",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "cross-site",
-        "Upgrade-Insecure-Requests": "1"
-      },
-      timeout: 10000
-    });
+    // 1. Try Main Page
+    const html = await fetchWithFallback(url);
+    
+    // 2. Try Embed Page (Often has fewer restrictions)
+    const embedHtml = await fetchWithFallback(`https://www.instagram.com/reels/${shortcode}/embed/`);
+    
+    const combinedHtml = (html || "") + (embedHtml || "");
 
     const patterns = [
       /"video_url":"([^"]+)"/,
@@ -97,39 +108,38 @@ async function resolveInstagramMedia(url: string) {
 
     let videoUrl = null;
 
-    // 1. LD+JSON
-    try {
-      const ldJsonMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
-      if (ldJsonMatch) {
+    // A. LD+JSON Search
+    const ldJsonMatch = combinedHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    if (ldJsonMatch) {
+      try {
         const ldData = JSON.parse(ldJsonMatch[1]);
-        const extractContentUrl = (obj: any): string | null => {
+        const extract = (obj: any): string | null => {
           if (!obj) return null;
           if (obj.contentUrl) return obj.contentUrl;
           if (Array.isArray(obj)) {
             for (const item of obj) {
-              const res = extractContentUrl(item);
+              const res = extract(item);
               if (res) return res;
             }
           }
           if (typeof obj === 'object') {
              for (const key in obj) {
-               const res = extractContentUrl(obj[key]);
+               const res = extract(obj[key]);
                if (res) return res;
              }
           }
           return null;
         };
-        videoUrl = extractContentUrl(ldData);
-      }
-    } catch (e) {}
+        videoUrl = extract(ldData);
+      } catch (e) {}
+    }
 
-    // 2. Regex
+    // B. Regex Search
     if (!videoUrl) {
       for (const pattern of patterns) {
-        const match = html.match(pattern);
+        const match = combinedHtml.match(pattern);
         if (match) {
-          let candidate = match[1];
-          candidate = candidate.replace(/\\u0026/g, "&").replace(/\\u003d/g, "=").replace(/\\u002f/g, "/").replace(/\\/g, "");
+          let candidate = match[1].replace(/\\u0026/g, "&").replace(/\\u003d/g, "=").replace(/\\u002f/g, "/").replace(/\\/g, "");
           if (candidate.startsWith("http") && !candidate.includes("<?xml")) {
             videoUrl = candidate;
             break;
@@ -138,28 +148,21 @@ async function resolveInstagramMedia(url: string) {
       }
     }
 
-    // 3. Mobile API Fallback with Query
+    // C. Mobile API Fallback
     if (!videoUrl) {
-      try {
-        const apiUrls = [
-          `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`,
-          `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`
-        ];
-        
-        for (const apiUrl of apiUrls) {
-          const { data } = await axios.get(apiUrl, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
-              "X-IG-App-ID": "936619743392459",
-            },
-            timeout: 5000
-          });
-          
+      const apiUrls = [
+        `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`,
+        `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`
+      ];
+      
+      for (const apiUrl of apiUrls) {
+        const data = await fetchWithFallback(apiUrl, { "X-IG-App-ID": "936619743392459" });
+        if (data) {
           const mediaData = data?.items?.[0] || data?.graphql?.shortcode_media;
           videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url || mediaData?.video_hd_url;
           if (videoUrl) break;
         }
-      } catch (e) {}
+      }
     }
 
     if (videoUrl) {
