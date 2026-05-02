@@ -10,7 +10,10 @@ const app = express();
 
 // ✅ Proper CORS setup
 app.use(cors({
-  origin: "https://insta-reel-grab-main-9fwyiewl7-coremind-technologys-projects.vercel.app",
+  origin: [
+    "https://insta-reel-grab-main-9fwyiewl7-coremind-technologys-projects.vercel.app",
+    "https://insta-reel-grab-main.vercel.app"
+  ],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Range"]
 }));
@@ -64,29 +67,107 @@ function isInstagramUrl(value: string) {
 // ------------------ SCRAPER ------------------
 async function resolveInstagramMedia(url: string) {
   const shortcode = new URL(url).pathname.split("/").filter(Boolean)[1] || "media";
+  const title = `Instagram Reel ${shortcode}`;
 
   try {
     const { data: html } = await axios.get(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.instagram.com/",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site",
+        "Upgrade-Insecure-Requests": "1"
       },
       timeout: 10000
     });
 
-    const match = html.match(/"video_url":"([^"]+)"/);
+    const patterns = [
+      /"video_url":"([^"]+)"/,
+      /<meta property="og:video" content="([^"]+)"/,
+      /<meta property="og:video:secure_url" content="([^"]+)"/,
+      /"video_src":"([^"]+)"/,
+      /video_url":"([^"]+)"/,
+      /"contentUrl":"([^"]+)"/
+    ];
 
-    if (match) {
-      const videoUrl = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
+    let videoUrl = null;
 
+    // 1. LD+JSON
+    try {
+      const ldJsonMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+      if (ldJsonMatch) {
+        const ldData = JSON.parse(ldJsonMatch[1]);
+        const extractContentUrl = (obj: any): string | null => {
+          if (!obj) return null;
+          if (obj.contentUrl) return obj.contentUrl;
+          if (Array.isArray(obj)) {
+            for (const item of obj) {
+              const res = extractContentUrl(item);
+              if (res) return res;
+            }
+          }
+          if (typeof obj === 'object') {
+             for (const key in obj) {
+               const res = extractContentUrl(obj[key]);
+               if (res) return res;
+             }
+          }
+          return null;
+        };
+        videoUrl = extractContentUrl(ldData);
+      }
+    } catch (e) {}
+
+    // 2. Regex
+    if (!videoUrl) {
+      for (const pattern of patterns) {
+        const match = html.match(pattern);
+        if (match) {
+          let candidate = match[1];
+          candidate = candidate.replace(/\\u0026/g, "&").replace(/\\u003d/g, "=").replace(/\\u002f/g, "/").replace(/\\/g, "");
+          if (candidate.startsWith("http") && !candidate.includes("<?xml")) {
+            videoUrl = candidate;
+            break;
+          }
+        }
+      }
+    }
+
+    // 3. Mobile API Fallback
+    if (!videoUrl) {
+      try {
+        const apiUrl = `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`;
+        const { data } = await axios.get(apiUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+            "X-IG-App-ID": "936619743392459",
+          },
+          timeout: 5000
+        });
+        const mediaData = data?.items?.[0] || data?.graphql?.shortcode_media;
+        videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url;
+      } catch (e) {}
+    }
+
+    if (videoUrl) {
+      const thumbMatch = html.match(/"display_url":"([^"]+)"/) || html.match(/<meta property="og:image" content="([^"]+)"/);
+      const thumbUrl = thumbMatch ? thumbMatch[1].replace(/\\u0026/g, "&").replace(/\\/g, "") : `https://www.instagram.com/p/${shortcode}/media/?size=l`;
+      
       return {
         id: shortcode,
+        title: title,
         videoUrl,
+        thumbnailUrl: thumbUrl,
+        audioUrl: videoUrl,
         sourceUrl: url,
         processedAt: new Date().toISOString(),
       };
     }
   } catch (err) {
-    console.error(err);
+    console.error("Scraping error:", err);
   }
 
   return null;
@@ -116,6 +197,51 @@ app.post("/api/process", async (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get("/api/download", async (req, res) => {
+  const mediaUrl = req.query.url as string;
+  const filename = req.query.filename as string || "download.mp4";
+
+  if (!mediaUrl || mediaUrl === "undefined") {
+    return res.status(400).send("Valid URL is required");
+  }
+
+  const headers: Record<string, string> = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+  };
+
+  if (req.headers.range) {
+    headers["Range"] = req.headers.range;
+  }
+
+  try {
+    const response = await axios({
+      url: mediaUrl,
+      method: 'GET',
+      responseType: 'stream',
+      headers: headers,
+      timeout: 15000,
+    });
+
+    if (response.status === 206) {
+      res.status(206);
+    }
+
+    const contentType = (response.headers["content-type"] as any) || "video/mp4";
+    const contentRange = response.headers["content-range"] as any;
+    const contentLength = response.headers["content-length"] as any;
+
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", contentType);
+    if (contentRange) res.setHeader("Content-Range", contentRange);
+    if (contentLength) res.setHeader("Content-Length", contentLength);
+    res.setHeader("Accept-Ranges", "bytes");
+    
+    response.data.pipe(res);
+  } catch (error) {
+    res.status(500).send("Download failed.");
   }
 });
 
