@@ -240,8 +240,12 @@ app.get("/api/download", async (req, res) => {
   }
 });
 
-app.listen(Number(port), "0.0.0.0", () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(Number(port), "0.0.0.0", () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+}
+
+export default app;
 
 
