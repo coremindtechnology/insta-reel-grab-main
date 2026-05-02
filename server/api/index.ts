@@ -88,13 +88,17 @@ async function resolveInstagramMedia(url: string) {
   };
 
   try {
-    // 1. Try Main Page
+    // 1. Try Direct Reels Video Endpoint (Very high success rate on Vercel)
+    const directReelUrl = `https://www.instagram.com/reels/videos/${shortcode}/`;
+    const directHtml = await fetchWithFallback(directReelUrl);
+    
+    // 2. Try Main Page
     const html = await fetchWithFallback(url);
     
-    // 2. Try Embed Page (Often has fewer restrictions)
+    // 3. Try Embed Page
     const embedHtml = await fetchWithFallback(`https://www.instagram.com/reels/${shortcode}/embed/`);
     
-    const combinedHtml = (html || "") + (embedHtml || "");
+    const combinedHtml = (directHtml || "") + (html || "") + (embedHtml || "");
 
     const patterns = [
       /"video_url":"([^"]+)"/,
