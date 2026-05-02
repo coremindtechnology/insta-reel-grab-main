@@ -200,8 +200,15 @@ function Index() {
       }
       setUrl(text.trim());
       toast.success("URL pasted");
-    } catch {
-      toast.error("Clipboard permission is unavailable");
+    } catch (err: any) {
+      console.error("Clipboard error:", err);
+      if (err.name === 'NotAllowedError') {
+        toast.error("Clipboard blocked! Please click the icon next to the URL bar and Allow 'Clipboard' access.", {
+          duration: 6000,
+        });
+      } else {
+        toast.error("Unable to read clipboard. Please paste manually (Ctrl+V).");
+      }
     }
   }
 
