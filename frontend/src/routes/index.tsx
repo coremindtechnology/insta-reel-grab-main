@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:3001").replace(/\/$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:3001").trim().replace(/\/+$/, "");
 
 export const Route = createFileRoute("/")({
   head: () => ({
