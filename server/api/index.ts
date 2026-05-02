@@ -91,11 +91,13 @@ async function resolveInstagramMedia(url: string) {
       /<meta property="og:video:secure_url" content="([^"]+)"/,
       /"video_src":"([^"]+)"/,
       /video_url":"([^"]+)"/,
-      /"contentUrl":"([^"]+)"/
+      /"contentUrl":"([^"]+)"/,
+      /"video_hd_url":"([^"]+)"/
     ];
 
     let videoUrl = null;
 
+    // 1. LD+JSON
     try {
       const ldJsonMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
       if (ldJsonMatch) {
@@ -121,6 +123,7 @@ async function resolveInstagramMedia(url: string) {
       }
     } catch (e) {}
 
+    // 2. Regex
     if (!videoUrl) {
       for (const pattern of patterns) {
         const match = html.match(pattern);
@@ -135,18 +138,27 @@ async function resolveInstagramMedia(url: string) {
       }
     }
 
+    // 3. Mobile API Fallback with Query
     if (!videoUrl) {
       try {
-        const apiUrl = `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`;
-        const { data } = await axios.get(apiUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
-            "X-IG-App-ID": "936619743392459",
-          },
-          timeout: 5000
-        });
-        const mediaData = data?.items?.[0] || data?.graphql?.shortcode_media;
-        videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url;
+        const apiUrls = [
+          `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`,
+          `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`
+        ];
+        
+        for (const apiUrl of apiUrls) {
+          const { data } = await axios.get(apiUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+              "X-IG-App-ID": "936619743392459",
+            },
+            timeout: 5000
+          });
+          
+          const mediaData = data?.items?.[0] || data?.graphql?.shortcode_media;
+          videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url || mediaData?.video_hd_url;
+          if (videoUrl) break;
+        }
       } catch (e) {}
     }
 
