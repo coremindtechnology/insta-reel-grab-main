@@ -231,9 +231,9 @@ app.get("/api/download", async (req, res) => {
       res.status(206);
     }
 
-    const contentType = response.headers["content-type"] || "video/mp4";
-    const contentRange = response.headers["content-range"];
-    const contentLength = response.headers["content-length"];
+    const contentType = (response.headers["content-type"] as any) || "video/mp4";
+    const contentRange = response.headers["content-range"] as any;
+    const contentLength = response.headers["content-length"] as any;
 
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Type", contentType);
