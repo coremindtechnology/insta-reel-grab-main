@@ -3,6 +3,7 @@ import cors from "cors";
 import { z } from "zod";
 import dotenv from "dotenv";
 import axios from "axios";
+import * as cheerio from "cheerio";
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
@@ -59,7 +60,6 @@ async function resolveInstagramMedia(url) {
     const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
     if (!shortcode)
         return null;
-    const title = `Instagram Reel ${shortcode}`;
     const commonHeaders = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
@@ -68,118 +68,143 @@ async function resolveInstagramMedia(url) {
         "Sec-Fetch-Site": "same-origin",
         "Upgrade-Insecure-Requests": "1"
     };
-    const fetchWithFallback = async (targetUrl, customHeaders = {}) => {
-        try {
-            const { data, status } = await axios.get(targetUrl, {
-                headers: { ...commonHeaders, ...customHeaders },
-                timeout: 10000,
-                validateStatus: () => true // Catch all statuses
-            });
-            if (status !== 200) {
-                console.warn(`Fetch failed for ${targetUrl} with status ${status}`);
-                return null;
-            }
-            return data;
-        }
-        catch (e) {
+    const extractVideoFromHtml = (html, targetShortcode) => {
+        if (!html)
+            return null;
+        // Safety check: Ensure the HTML actually belongs to our Reel and isn't a login/home page
+        // Instagram's home/login pages usually don't have the specific shortcode in the title or meta
+        if (!html.includes(targetShortcode) && !html.includes("instagram.com/reels/videos/")) {
             return null;
         }
-    };
-    try {
-        // 1. Try Direct Reels Video Endpoint (Very high success rate on Vercel)
-        const directReelUrl = `https://www.instagram.com/reels/videos/${shortcode}/`;
-        const directHtml = await fetchWithFallback(directReelUrl);
-        // 2. Try Main Page
-        const html = await fetchWithFallback(url);
-        // 3. Try Embed Page
-        const embedHtml = await fetchWithFallback(`https://www.instagram.com/reels/${shortcode}/embed/`);
-        const combinedHtml = (directHtml || "") + (html || "") + (embedHtml || "");
-        if (!combinedHtml) {
-            console.error("All HTML fetch attempts failed for", shortcode);
-        }
-        const patterns = [
-            /"video_url":"([^"]+)"/,
-            /<meta property="og:video" content="([^"]+)"/,
-            /<meta property="og:video:secure_url" content="([^"]+)"/,
-            /"video_src":"([^"]+)"/,
-            /video_url":"([^"]+)"/,
-            /"contentUrl":"([^"]+)"/,
-            /"video_hd_url":"([^"]+)"/,
-            /"video_versions":\[{"type":\d+,"url":"([^"]+)"/
-        ];
+        const $ = cheerio.load(html);
         let videoUrl = null;
-        // A. LD+JSON Search
-        const ldJsonMatch = combinedHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
-        if (ldJsonMatch) {
-            try {
-                const ldData = JSON.parse(ldJsonMatch[1]);
-                const extract = (obj) => {
-                    if (!obj)
-                        return null;
-                    if (obj.contentUrl && typeof obj.contentUrl === 'string')
-                        return obj.contentUrl;
-                    if (Array.isArray(obj)) {
-                        for (const item of obj) {
-                            const res = extract(item);
-                            if (res)
-                                return res;
-                        }
-                    }
-                    if (typeof obj === 'object') {
-                        for (const key in obj) {
-                            const res = extract(obj[key]);
-                            if (res)
-                                return res;
-                        }
-                    }
-                    return null;
-                };
-                videoUrl = extract(ldData);
-            }
-            catch (e) { }
-        }
-        // B. Regex Search
+        // 1. Try OG Meta Tags (Most reliable if present)
+        videoUrl = $('meta[property="og:video"]').attr('content') ||
+            $('meta[property="og:video:secure_url"]').attr('content') ||
+            $('meta[name="twitter:player"]').attr('content');
+        // 2. Try LD+JSON
         if (!videoUrl) {
+            $('script[type="application/ld+json"]').each((_, el) => {
+                try {
+                    const data = JSON.parse($(el).html() || "");
+                    const search = (obj) => {
+                        if (obj?.contentUrl)
+                            return obj.contentUrl;
+                        if (Array.isArray(obj)) {
+                            for (const item of obj) {
+                                const res = search(item);
+                                if (res)
+                                    return res;
+                            }
+                        }
+                        if (typeof obj === 'object') {
+                            for (const k in obj) {
+                                const res = search(obj[k]);
+                                if (res)
+                                    return res;
+                            }
+                        }
+                        return null;
+                    };
+                    videoUrl = search(data);
+                    if (videoUrl)
+                        return false; // break loop
+                }
+                catch (e) { }
+            });
+        }
+        // 3. Regex Fallback (only if specific to video_url and NOT a generic background video)
+        if (!videoUrl) {
+            const patterns = [
+                /"video_url":"([^"]+)"/,
+                /"video_src":"([^"]+)"/,
+                /"contentUrl":"([^"]+)"/,
+                /"video_hd_url":"([^"]+)"/
+            ];
             for (const pattern of patterns) {
-                const match = combinedHtml.match(pattern);
+                const match = html.match(pattern);
                 if (match) {
                     let candidate = match[1].replace(/\\u0026/g, "&").replace(/\\u003d/g, "=").replace(/\\u002f/g, "/").replace(/\\/g, "");
                     if (candidate.startsWith("http") && !candidate.includes("<?xml")) {
-                        videoUrl = candidate;
-                        break;
+                        // Further validation: is this candidate near our shortcode in the text?
+                        const index = html.indexOf(match[0]);
+                        const surrounding = html.substring(Math.max(0, index - 500), Math.min(html.length, index + 500));
+                        if (surrounding.includes(targetShortcode) || html.includes(`"shortcode":"${targetShortcode}"`)) {
+                            videoUrl = candidate;
+                            break;
+                        }
                     }
                 }
             }
         }
-        // C. Mobile API Fallback (High resilience)
-        if (!videoUrl) {
-            const apiUrls = [
-                `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`,
-                `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`,
-                `https://www.instagram.com/p/${shortcode}/media/?size=l` // Not video but last resort for thumb
-            ];
-            for (const apiUrl of apiUrls) {
-                const data = await fetchWithFallback(apiUrl, { "X-IG-App-ID": "936619743392459" });
-                if (data && typeof data === 'object') {
-                    const mediaData = data?.items?.[0] || data?.graphql?.shortcode_media;
-                    videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url || mediaData?.video_hd_url;
-                    if (videoUrl)
-                        break;
+        return videoUrl;
+    };
+    const sources = [
+        { name: "Direct", url: `https://www.instagram.com/reels/videos/${shortcode}/` },
+        { name: "Embed", url: `https://www.instagram.com/reels/${shortcode}/embed/` },
+        { name: "Main", url: `https://www.instagram.com/reels/${shortcode}/` },
+        { name: "Post", url: `https://www.instagram.com/p/${shortcode}/` }
+    ];
+    try {
+        for (const source of sources) {
+            try {
+                const { data, status } = await axios.get(source.url, {
+                    headers: commonHeaders,
+                    timeout: 8000,
+                    validateStatus: () => true
+                });
+                if (status === 200 && data) {
+                    const videoUrl = extractVideoFromHtml(data, shortcode);
+                    if (videoUrl) {
+                        const $ = cheerio.load(data);
+                        const thumbUrl = $('meta[property="og:image"]').attr('content') || `https://www.instagram.com/p/${shortcode}/media/?size=l`;
+                        return {
+                            id: shortcode,
+                            title: `Instagram Reel ${shortcode}`,
+                            videoUrl,
+                            thumbnailUrl: thumbUrl,
+                            audioUrl: videoUrl,
+                            sourceUrl: url,
+                            processedAt: new Date().toISOString(),
+                        };
+                    }
                 }
             }
+            catch (e) {
+                console.warn(`Source ${source.name} failed:`, e instanceof Error ? e.message : e);
+            }
         }
-        if (videoUrl) {
-            const thumbMatch = combinedHtml.match(/"display_url":"([^"]+)"/) || combinedHtml.match(/<meta property="og:image" content="([^"]+)"/);
-            const thumbUrl = thumbMatch ? thumbMatch[1].replace(/\\u0026/g, "&").replace(/\\/g, "") : `https://www.instagram.com/p/${shortcode}/media/?size=l`;
-            return {
-                id: shortcode,
-                title: title,
-                videoUrl,
-                thumbnailUrl: thumbUrl,
-                audioUrl: videoUrl,
-                sourceUrl: url,
-                processedAt: new Date().toISOString(),
-            };
+        // Final Fallback: Mobile API
+        const apiUrls = [
+            `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`,
+            `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`
+        ];
+        for (const apiUrl of apiUrls) {
+            try {
+                const { data, status } = await axios.get(apiUrl, {
+                    headers: { ...commonHeaders, "X-IG-App-ID": "936619743392459" },
+                    timeout: 8000,
+                    validateStatus: () => true
+                });
+                if (status === 200 && data && typeof data === 'object') {
+                    const mediaData = data?.items?.[0] || data?.graphql?.shortcode_media;
+                    if (mediaData) {
+                        const videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url;
+                        if (videoUrl) {
+                            return {
+                                id: shortcode,
+                                title: `Instagram Reel ${shortcode}`,
+                                videoUrl,
+                                thumbnailUrl: mediaData?.display_url || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
+                                audioUrl: videoUrl,
+                                sourceUrl: url,
+                                processedAt: new Date().toISOString(),
+                            };
+                        }
+                    }
+                }
+            }
+            catch (e) { }
         }
     }
     catch (err) {
