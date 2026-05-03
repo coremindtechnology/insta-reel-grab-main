@@ -216,7 +216,21 @@ async function resolveInstagramMedia(url) {
 const router = express.Router();
 // Root route for health check
 router.get("/", (req, res) => {
-    res.json({ status: "ok", message: "InstaFetch API is running" });
+    res.json({ status: "ok", message: "InstaFetch API is running", version: "1.2.0" });
+});
+// Informational GET routes for POST-only endpoints
+router.get("/process", (req, res) => {
+    res.status(405).json({
+        error: "Method Not Allowed",
+        message: "This endpoint requires a POST request with a JSON body containing the Instagram URL.",
+        example: { url: "https://www.instagram.com/reel/..." }
+    });
+});
+router.get("/download", (req, res) => {
+    res.status(400).json({
+        error: "Bad Request",
+        message: "This endpoint requires 'url' and 'filename' query parameters to proxy a download."
+    });
 });
 router.post("/process", async (req, res) => {
     try {
