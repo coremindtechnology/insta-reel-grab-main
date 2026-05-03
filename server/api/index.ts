@@ -9,16 +9,13 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
-// ✅ Robust CORS middleware
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Range");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// ✅ Robust CORS configuration
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS", "PATCH", "DELETE", "PUT"],
+  allowedHeaders: ["X-CSRF-Token", "X-Requested-With", "Accept", "Accept-Version", "Content-Length", "Content-MD5", "Content-Type", "Date", "X-Api-Version", "Range", "Authorization"],
+  credentials: true
+}));
 
 app.use(express.json());
 
@@ -191,8 +188,14 @@ async function resolveInstagramMedia(url: string) {
 }
 
 // ------------------ ROUTES ------------------
-// Note: In Vercel, if this is api/index.ts, the routes become relative to /api/
-app.post("/api/process", async (req, res) => {
+const router = express.Router();
+
+// Root route for health check
+router.get("/", (req, res) => {
+  res.json({ status: "ok", message: "InstaFetch API is running" });
+});
+
+router.post("/process", async (req, res) => {
   try {
     const { url } = requestSchema.parse(req.body);
     const cleanUrl = sanitizeInstagramUrl(url);
@@ -218,7 +221,7 @@ app.post("/api/process", async (req, res) => {
   }
 });
 
-app.get("/api/download", async (req, res) => {
+router.get("/download", async (req, res) => {
   const mediaUrl = req.query.url as string;
   const filename = req.query.filename as string || "download.mp4";
 
@@ -261,6 +264,21 @@ app.get("/api/download", async (req, res) => {
   } catch (error) {
     res.status(500).send("Download failed.");
   }
+});
+
+// Mount the router at both /api and / to handle different Vercel mounting behaviors
+app.use("/api", router);
+app.use("/", router);
+
+// Fallback 404 handler for debugging
+app.use((req, res) => {
+  console.log(`404: ${req.method} ${req.url}`);
+  res.status(404).json({ 
+    error: "Not Found", 
+    path: req.url,
+    method: req.method,
+    message: "The requested route does not exist on this server."
+  });
 });
 
 if (process.env.NODE_ENV !== 'production') {
