@@ -55,19 +55,30 @@ function isInstagramUrl(value) {
 }
 // ------------------ SCRAPER ------------------
 async function resolveInstagramMedia(url) {
-    // More robust shortcode extraction
     const shortcodeMatch = url.match(/\/(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
-    const shortcode = shortcodeMatch ? shortcodeMatch[1] : "media";
+    const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
+    if (!shortcode)
+        return null;
     const title = `Instagram Reel ${shortcode}`;
+    const commonHeaders = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "same-origin",
+        "Upgrade-Insecure-Requests": "1"
+    };
     const fetchWithFallback = async (targetUrl, customHeaders = {}) => {
         try {
-            const { data } = await axios.get(targetUrl, {
-                headers: {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                    ...customHeaders
-                },
-                timeout: 8000
+            const { data, status } = await axios.get(targetUrl, {
+                headers: { ...commonHeaders, ...customHeaders },
+                timeout: 10000,
+                validateStatus: () => true // Catch all statuses
             });
+            if (status !== 200) {
+                console.warn(`Fetch failed for ${targetUrl} with status ${status}`);
+                return null;
+            }
             return data;
         }
         catch (e) {
@@ -83,6 +94,9 @@ async function resolveInstagramMedia(url) {
         // 3. Try Embed Page
         const embedHtml = await fetchWithFallback(`https://www.instagram.com/reels/${shortcode}/embed/`);
         const combinedHtml = (directHtml || "") + (html || "") + (embedHtml || "");
+        if (!combinedHtml) {
+            console.error("All HTML fetch attempts failed for", shortcode);
+        }
         const patterns = [
             /"video_url":"([^"]+)"/,
             /<meta property="og:video" content="([^"]+)"/,
@@ -90,7 +104,8 @@ async function resolveInstagramMedia(url) {
             /"video_src":"([^"]+)"/,
             /video_url":"([^"]+)"/,
             /"contentUrl":"([^"]+)"/,
-            /"video_hd_url":"([^"]+)"/
+            /"video_hd_url":"([^"]+)"/,
+            /"video_versions":\[{"type":\d+,"url":"([^"]+)"/
         ];
         let videoUrl = null;
         // A. LD+JSON Search
@@ -101,7 +116,7 @@ async function resolveInstagramMedia(url) {
                 const extract = (obj) => {
                     if (!obj)
                         return null;
-                    if (obj.contentUrl)
+                    if (obj.contentUrl && typeof obj.contentUrl === 'string')
                         return obj.contentUrl;
                     if (Array.isArray(obj)) {
                         for (const item of obj) {
@@ -136,15 +151,16 @@ async function resolveInstagramMedia(url) {
                 }
             }
         }
-        // C. Mobile API Fallback
+        // C. Mobile API Fallback (High resilience)
         if (!videoUrl) {
             const apiUrls = [
                 `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`,
-                `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`
+                `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`,
+                `https://www.instagram.com/p/${shortcode}/media/?size=l` // Not video but last resort for thumb
             ];
             for (const apiUrl of apiUrls) {
                 const data = await fetchWithFallback(apiUrl, { "X-IG-App-ID": "936619743392459" });
-                if (data) {
+                if (data && typeof data === 'object') {
                     const mediaData = data?.items?.[0] || data?.graphql?.shortcode_media;
                     videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url || mediaData?.video_hd_url;
                     if (videoUrl)
@@ -153,7 +169,7 @@ async function resolveInstagramMedia(url) {
             }
         }
         if (videoUrl) {
-            const thumbMatch = html.match(/"display_url":"([^"]+)"/) || html.match(/<meta property="og:image" content="([^"]+)"/);
+            const thumbMatch = combinedHtml.match(/"display_url":"([^"]+)"/) || combinedHtml.match(/<meta property="og:image" content="([^"]+)"/);
             const thumbUrl = thumbMatch ? thumbMatch[1].replace(/\\u0026/g, "&").replace(/\\/g, "") : `https://www.instagram.com/p/${shortcode}/media/?size=l`;
             return {
                 id: shortcode,
