@@ -56,7 +56,7 @@ function isInstagramUrl(value: string) {
     const host = url.hostname.replace(/^www\./, "");
     return (
       host === "instagram.com" &&
-      /^\/(reel|p|tv)\/[A-Za-z0-9_-]+\/?$/.test(url.pathname)
+      /^\/(reels?|p|tv)\/[A-Za-z0-9_-]+\/?$/.test(url.pathname)
     );
   } catch {
     return false;
@@ -75,7 +75,9 @@ async function resolveInstagramMedia(url: string) {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
     "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Sec-Fetch-Dest": "document",
     "Upgrade-Insecure-Requests": "1"
   };
 
@@ -244,12 +246,6 @@ router.get("/process", (req, res) => {
   });
 });
 
-router.get("/download", (req, res) => {
-  res.status(400).json({ 
-    error: "Bad Request", 
-    message: "This endpoint requires 'url' and 'filename' query parameters to proxy a download." 
-  });
-});
 
 router.post("/process", async (req, res) => {
   try {
@@ -268,7 +264,7 @@ router.post("/process", async (req, res) => {
     const result = await resolveInstagramMedia(cleanUrl);
 
     if (!result) {
-      return res.status(404).json({ error: "Media not found" });
+      return res.status(422).json({ error: "Media not found or content is private. Please ensure the URL is correct and the post is public." });
     }
 
     res.json(result);

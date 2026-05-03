@@ -73,7 +73,7 @@ function isInstagramUrl(value: string) {
   try {
     const url = new URL(value);
     const host = url.hostname.replace(/^www\./, "");
-    return host === "instagram.com" && /^\/(reel|p|tv)\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
+    return host === "instagram.com" && /^\/(reels?|p|tv)\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
   } catch {
     return false;
   }
