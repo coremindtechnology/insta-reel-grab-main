@@ -78,7 +78,8 @@ async function resolveInstagramMedia(url: string) {
     "Sec-Fetch-Site": "none",
     "Sec-Fetch-User": "?1",
     "Sec-Fetch-Dest": "document",
-    "Upgrade-Insecure-Requests": "1"
+    "Upgrade-Insecure-Requests": "1",
+    "Referer": "https://www.instagram.com/"
   };
 
   const extractVideoFromHtml = (html: string, targetShortcode: string) => {
@@ -126,19 +127,38 @@ async function resolveInstagramMedia(url: string) {
       });
     }
 
-    // 4. Look for additional video properties
+    // 4. Look for additional video properties with broader regex
     if (!videoUrl) {
       const additionalPatterns = [
         /"video_url":"([^"]+)"/,
         /"video_src":"([^"]+)"/,
         /"contentUrl":"([^"]+)"/,
-        /video_url\\":\\"([^\\"]+)\\"/
+        /video_url\\":\\"([^\\"]+)\\"/,
+        /"video_versions":\[{"type":\d+,"url":"([^"]+)"/,
+        /video_url":"([^"]+)"/
       ];
       for (const pattern of additionalPatterns) {
         const match = html.match(pattern);
         if (match) {
           videoUrl = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
-          break;
+          if (videoUrl.startsWith('http')) break;
+          videoUrl = null;
+        }
+      }
+    }
+
+    // 5. Check for encoded JSON in scripts (Common in newer IG layouts)
+    if (!videoUrl) {
+      const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/g);
+      if (scriptMatches) {
+        for (const script of scriptMatches) {
+          if (script.includes("video_url") || script.includes("video_versions")) {
+            const innerMatch = script.match(/"video_url":"([^"]+)"/);
+            if (innerMatch) {
+              videoUrl = innerMatch[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
+              break;
+            }
+          }
         }
       }
     }
@@ -189,10 +209,12 @@ async function resolveInstagramMedia(url: string) {
       }
     }
 
-    // Final Fallback: Mobile API
+    // Final Fallback: Mobile API with more variations
     const apiUrls = [
       `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`,
-      `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`
+      `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`,
+      `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=1`,
+      `https://www.instagram.com/p/${shortcode}/?__a=1&__d=1`
     ];
     for (const apiUrl of apiUrls) {
       try {
