@@ -86,7 +86,8 @@ async function resolveInstagramMedia(url: string) {
     
     // Safety check: Ensure the HTML actually belongs to our Reel and isn't a login/home page
     // Instagram's home/login pages usually don't have the specific shortcode in the title or meta
-    if (!html.includes(targetShortcode) && !html.includes("instagram.com/reels/videos/")) {
+    if (!html.includes(targetShortcode) && !html.includes("instagram.com/reels/videos/") && !html.includes("EmbedVideo")) {
+      if (html.includes("login") || html.includes("checkpoint")) return "BLOCKED";
       return null;
     }
 
@@ -125,27 +126,19 @@ async function resolveInstagramMedia(url: string) {
       });
     }
 
-    // 3. Regex Fallback (only if specific to video_url and NOT a generic background video)
+    // 4. Look for additional video properties
     if (!videoUrl) {
-      const patterns = [
+      const additionalPatterns = [
         /"video_url":"([^"]+)"/,
         /"video_src":"([^"]+)"/,
         /"contentUrl":"([^"]+)"/,
-        /"video_hd_url":"([^"]+)"/
+        /video_url\\":\\"([^\\"]+)\\"/
       ];
-      for (const pattern of patterns) {
+      for (const pattern of additionalPatterns) {
         const match = html.match(pattern);
         if (match) {
-          let candidate = match[1].replace(/\\u0026/g, "&").replace(/\\u003d/g, "=").replace(/\\u002f/g, "/").replace(/\\/g, "");
-          if (candidate.startsWith("http") && !candidate.includes("<?xml")) {
-            // Further validation: is this candidate near our shortcode in the text?
-            const index = html.indexOf(match[0]);
-            const surrounding = html.substring(Math.max(0, index - 500), Math.min(html.length, index + 500));
-            if (surrounding.includes(targetShortcode) || html.includes(`"shortcode":"${targetShortcode}"`)) {
-              videoUrl = candidate;
-              break;
-            }
-          }
+          videoUrl = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
+          break;
         }
       }
     }
@@ -154,8 +147,9 @@ async function resolveInstagramMedia(url: string) {
   };
 
   const sources = [
-    { name: "Direct", url: `https://www.instagram.com/reels/videos/${shortcode}/` },
     { name: "Embed", url: `https://www.instagram.com/reels/${shortcode}/embed/` },
+    { name: "Embed Captioned", url: `https://www.instagram.com/reels/${shortcode}/embed/captioned/` },
+    { name: "Direct", url: `https://www.instagram.com/reels/videos/${shortcode}/` },
     { name: "Main", url: `https://www.instagram.com/reels/${shortcode}/` },
     { name: "Post", url: `https://www.instagram.com/p/${shortcode}/` }
   ];
@@ -165,21 +159,26 @@ async function resolveInstagramMedia(url: string) {
       try {
         const { data, status } = await axios.get(source.url, {
           headers: commonHeaders,
-          timeout: 8000,
+          timeout: 12000,
           validateStatus: () => true
         });
 
         if (status === 200 && data) {
           const videoUrl = extractVideoFromHtml(data, shortcode);
+          if (videoUrl === "BLOCKED") {
+             console.warn(`Source ${source.name} was blocked by login.`);
+             continue;
+          }
           if (videoUrl) {
             const $ = cheerio.load(data);
             const thumbUrl = $('meta[property="og:image"]').attr('content') || `https://www.instagram.com/p/${shortcode}/media/?size=l`;
+            const audioUrl = videoUrl; // Fallback to video URL if dedicated audio not found
             return {
               id: shortcode,
               title: `Instagram Reel ${shortcode}`,
               videoUrl,
               thumbnailUrl: thumbUrl,
-              audioUrl: videoUrl,
+              audioUrl: audioUrl,
               sourceUrl: url,
               processedAt: new Date().toISOString(),
             };
@@ -199,7 +198,7 @@ async function resolveInstagramMedia(url: string) {
       try {
         const { data, status } = await axios.get(apiUrl, {
           headers: { ...commonHeaders, "X-IG-App-ID": "936619743392459" },
-          timeout: 8000,
+          timeout: 12000,
           validateStatus: () => true
         });
         if (status === 200 && data && typeof data === 'object') {
@@ -207,12 +206,15 @@ async function resolveInstagramMedia(url: string) {
           if (mediaData) {
             const videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url;
             if (videoUrl) {
+              const audioUrl = mediaData?.clips_metadata?.music_info?.music?.fast_start_progressive_download_url || 
+                               mediaData?.music_metadata?.music_info?.music?.fast_start_progressive_download_url ||
+                               videoUrl;
               return {
                 id: shortcode,
                 title: `Instagram Reel ${shortcode}`,
                 videoUrl,
                 thumbnailUrl: mediaData?.display_url || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
-                audioUrl: videoUrl,
+                audioUrl: audioUrl,
                 sourceUrl: url,
                 processedAt: new Date().toISOString(),
               };

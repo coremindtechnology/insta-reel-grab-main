@@ -24,20 +24,20 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:3001").t
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Instagram Video & Audio Downloader" },
+      { title: "Instagram Audio Downloader - Save MP3 from Reels" },
       {
         name: "description",
-        content: "Download Instagram videos and extract MP3 audio from Reels or Posts with a clean, responsive downloader.",
+        content: "Download and extract high-quality MP3 audio from any Instagram Reel or Post. Fast, free, and easy to use.",
       },
-      { property: "og:title", content: "Instagram Video & Audio Downloader" },
+      { property: "og:title", content: "Instagram Audio Downloader" },
       {
         property: "og:description",
-        content: "Paste an Instagram URL, preview media, and download video or MP3 audio from one fast single-page app.",
+        content: "Extract high-quality MP3 audio from Instagram Reels and Posts with one click.",
       },
-      { name: "twitter:title", content: "Instagram Video & Audio Downloader" },
+      { name: "twitter:title", content: "Instagram Audio Downloader" },
       {
         name: "twitter:description",
-        content: "Paste an Instagram URL, preview media, and download video or MP3 audio from one fast single-page app.",
+        content: "Extract high-quality MP3 audio from Instagram Reels and Posts with one click.",
       },
     ],
     links: [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }],
@@ -223,7 +223,7 @@ function Index() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">InstaFetch</p>
-              <p className="text-xs text-muted-foreground">Video + MP3 downloader</p>
+              <p className="text-xs text-muted-foreground">Instagram Audio Downloader</p>
             </div>
           </div>
           <Button variant="glass" size="icon" aria-label="Toggle dark mode" onClick={() => setIsDark((value) => !value)}>
@@ -242,10 +242,10 @@ function Index() {
 
             <div className="space-y-4">
               <h1 className="text-4xl font-black leading-tight tracking-normal text-foreground sm:text-5xl lg:text-6xl mx-auto">
-                Instagram Video & Audio <span className="text-gradient-instagram">Downloader</span>
+                Instagram Audio <span className="text-gradient-instagram">Downloader</span>
               </h1>
               <p className="max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg mx-auto">
-                Paste a public Instagram Reel or Post URL, preview the media, and launch fast video or audio downloads.
+                Paste a public Instagram Reel or Post URL to extract and download high-quality MP3 audio instantly.
               </p>
             </div>
 
@@ -385,30 +385,16 @@ function Index() {
                   
                   <div className="grid gap-5">
                     <div className="space-y-2">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Video Output</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Audio Extraction</p>
                       <Button 
                         variant="instagram" 
                         size="lg" 
-                        className="w-full h-16 text-lg font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group" 
-                        onClick={() => openDownload(media, "video")}
-                      >
-                        <Video className="mr-3 h-6 w-6 group-hover:scale-110 transition-transform" />
-                        Download Video (MP4)
-                        <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">HD</div>
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Audio Extraction</p>
-                      <Button 
-                        variant="glass" 
-                        size="lg" 
-                        className="w-full h-16 text-lg font-black hover:bg-secondary/60 hover:translate-y-[-2px] transition-all duration-300 rounded-2xl border-2 border-primary/10 group" 
+                        className="w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group" 
                         onClick={() => openDownload(media, "audio")}
                       >
-                        <FileAudio className="mr-3 h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                        <FileAudio className="mr-3 h-7 w-7 text-white group-hover:scale-110 transition-transform" />
                         Download Audio (MP3)
-                        <div className="ml-auto bg-primary/10 text-primary px-3 py-1 rounded-lg text-xs font-bold text-black">320kbps</div>
+                        <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">320kbps</div>
                       </Button>
                     </div>
                   </div>
@@ -427,45 +413,45 @@ function Index() {
           )}
           
           <div className="max-w-7xl mx-auto space-y-6 text-left animate-rise py-8 border-t border-border/50 w-full">
-            <h2 className="text-2xl font-bold text-foreground">Instagram Reels Video Download</h2>
+            <h2 className="text-2xl font-bold text-foreground">Instagram Reels Audio Download</h2>
             <div className="space-y-4 text-muted-foreground leading-relaxed">
               <p>
-                Our <strong>Instagram Reels Video Download</strong> tool is designed to provide you with the fastest and most reliable way to save your favorite Instagram content. Whether you want to keep a funny Reel, an inspiring story, or a helpful tutorial, our <strong>Instagram downloader</strong> ensures you get high-quality videos every time without any hassle.
+                Our <strong>Instagram Reels Audio Download</strong> tool is designed to provide you with the fastest and most reliable way to save the audio from your favorite Instagram content. Whether it's a trending song, a funny soundbite, or an inspiring speech, our <strong>Instagram audio downloader</strong> ensures you get high-quality MP3 files every time.
               </p>
               <p>
-                We support a wide range of content, making <strong>Reels video download</strong> seamless across all devices, including mobile, tablet, and desktop. Simply paste the URL and our system will process the media in seconds. You can also extract MP3 audio, which is perfect for saving background music or podcasts directly from Instagram posts while maintaining excellent audio clarity.
+                We support a wide range of content, making <strong>Reels audio download</strong> seamless across all devices, including mobile, tablet, and desktop. Simply paste the URL and our system will extract the audio in seconds. This is perfect for saving background music or podcasts directly from Instagram posts while maintaining excellent audio clarity.
               </p>
               <p>
-                Experience the ultimate convenience with our clean, responsive interface. No registration or login is required, and we prioritize your privacy while providing high-speed downloads. Start using our service today for all your <strong>Instagram video and audio</strong> needs and enjoy your favorite media offline anytime, anywhere.
+                Experience the ultimate convenience with our clean, responsive interface. No registration or login is required, and we prioritize your privacy while providing high-speed extractions. Start using our service today for all your <strong>Instagram audio</strong> needs and enjoy your favorite sounds offline anytime, anywhere.
               </p>
             </div>
 
             <div className="mt-10 space-y-6 pt-8 border-t border-border/30 w-full">
-              <h3 className="text-xl font-bold text-foreground">Key Features of Instagram Reels Download</h3>
+              <h3 className="text-xl font-bold text-foreground">Key Features of Instagram Reels Audio Download</h3>
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <li className="flex gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
-                  <span className="text-sm text-muted-foreground"><strong>High-Quality Downloads:</strong> Save videos in original HD resolution for the best viewing experience.</span>
+                  <span className="text-sm text-muted-foreground"><strong>High-Quality MP3:</strong> Extract audio in the best possible quality for clear listening.</span>
                 </li>
                 <li className="flex gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
-                  <span className="text-sm text-muted-foreground"><strong>Fast & Efficient:</strong> Get your download links in seconds with our high-speed processing system.</span>
+                  <span className="text-sm text-muted-foreground"><strong>Fast & Efficient:</strong> Get your MP3 links in seconds with our high-speed extraction system.</span>
                 </li>
                 <li className="flex gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
-                  <span className="text-sm text-muted-foreground"><strong>No Registration Required:</strong> Start downloading immediately without creating an account or logging in.</span>
+                  <span className="text-sm text-muted-foreground"><strong>No Registration Required:</strong> Start downloading audio immediately without creating an account.</span>
                 </li>
                 <li className="flex gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
-                  <span className="text-sm text-muted-foreground"><strong>Extract MP3 Audio:</strong> Easily convert Instagram Reels and videos to high-quality MP3 audio files.</span>
+                  <span className="text-sm text-muted-foreground"><strong>One-Click Extraction:</strong> Easily convert any Instagram Reel or video to MP3 with a single click.</span>
                 </li>
                 <li className="flex gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -478,10 +464,10 @@ function Index() {
 
             <div className="mt-16 space-y-12 pt-10 border-t border-border/30 w-full max-w-7xl mx-auto">
               <div className="text-center space-y-4">
-                <h2 className="text-3xl font-black text-primary">Ways to Download Instagram Reels Video</h2>
+                <h2 className="text-3xl font-black text-primary">Ways to Download Instagram Audio</h2>
                 <p className="max-w-4xl mx-auto text-muted-foreground">
-                  InstaFetch provides an easy way to download Instagram Reels. Just follow these simple steps to download Reels. 
-                  We guide you with images to make it even easier to understand the downloading process.
+                  InstaFetch provides an easy way to extract audio from Instagram Reels. Just follow these simple steps to download MP3s. 
+                  We guide you with images to make it even easier to understand the process.
                 </p>
               </div>
               
@@ -507,9 +493,9 @@ function Index() {
                 </div>
 
                 <div className="flex flex-col items-center text-center space-y-6">
-                  <h3 className="text-xl font-bold text-primary">Save Instagram Reels</h3>
+                  <h3 className="text-xl font-bold text-primary">Save Instagram Audio</h3>
                   <div className="w-full aspect-video overflow-hidden rounded-2xl border border-border shadow-sm bg-secondary/30">
-                    <img src="/guide/step3.png" alt="Save Instagram Reels" className="h-full w-full object-cover" />
+                    <img src="/guide/step3.png" alt="Save Instagram Audio" className="h-full w-full object-cover" />
                   </div>
                   <p className="text-sm leading-relaxed text-muted-foreground px-2">
                     Click on the download button to download the Instagram Reels, and the Reels will be saved in your downloads folder or phone gallery. Now you can enjoy your high-quality downloaded Reels.
@@ -531,20 +517,20 @@ function Index() {
             
             <div className="lg:w-1/2 space-y-6">
               <h2 className="text-3xl sm:text-4xl font-black text-foreground leading-tight">
-                Download Instagram Reels Video <span className="text-primary">without Watermark</span>
+                Download Instagram Audio <span className="text-primary">in High Quality MP3</span>
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  Are you looking for the best way to <strong>Download Instagram Reels Video without Watermark</strong>? You've come to the right place. Our advanced downloader ensures that every video you save is in its original, pristine quality, free from any distracting logos or watermarks. This makes it perfect for content creators who want to repurpose their content.
+                  Are you looking for the best way to <strong>Download Instagram Audio in High Quality</strong>? You've come to the right place. Our advanced extractor ensures that every MP3 you save is in its best available quality, perfect for listening on any device or using in your own projects.
                 </p>
                 <p>
-                  Unlike many other tools, our system prioritizes high-definition output. When you use InstaFetch for your <strong>Instagram Reels video download</strong>, we fetch the highest available resolution. Whether it's a 1080p Reel or a 4K post, you get exactly what you see on the app, but saved locally on your device for offline enjoyment.
+                  Unlike many other tools, our system prioritizes audio fidelity. When you use InstaFetch for your <strong>Instagram Reels audio download</strong>, we fetch the highest bit-rate stream available. Whether it's a 128kbps or 320kbps source, you get the clearest audio saved locally on your device.
                 </p>
                 <p>
-                  The process is completely free and requires no registration. We believe that accessing your own favorite content should be simple and fast. Our servers are optimized to handle requests in seconds, meaning you don't have to wait around. Just paste the link, and let our engine do the heavy lifting of fetching the watermark-free video for you.
+                  The process is completely free and requires no registration. We believe that accessing your favorite audio should be simple and fast. Our servers are optimized to handle extractions in seconds, meaning you don't have to wait around. Just paste the link, and let our engine do the heavy lifting for you.
                 </p>
                 <p>
-                  Compatibility is never an issue with our tool. You can download reels on your iPhone, Android, or PC without any additional software installation. Our web-based platform is fully responsive and secure, ensuring that your data remains private while you get the best <strong>no-watermark Instagram download</strong> experience available today.
+                  Compatibility is never an issue. You can download audio on your iPhone, Android, or PC without any additional software. Our web-based platform is fully responsive and secure, ensuring that your data remains private while you get the best <strong>Instagram MP3 download</strong> experience available today.
                 </p>
               </div>
             </div>
@@ -552,9 +538,9 @@ function Index() {
 
           <div className="mt-20 space-y-12 pt-16 border-t border-border/30 animate-rise w-full max-w-7xl mx-auto">
             <div className="text-center space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-black text-foreground">How to download Instagram Reels?</h2>
+              <h2 className="text-3xl sm:text-4xl font-black text-foreground">How to download Instagram Audio?</h2>
               <p className="max-w-2xl mx-auto text-muted-foreground">
-                Follow these steps for Instagram Reels Download. We guided step by step method for Instagram reels video download in easiest way.
+                Follow these steps for Instagram Audio Download. We guided step by step method for Instagram reels MP3 download in easiest way.
               </p>
             </div>
 
@@ -573,11 +559,11 @@ function Index() {
               </div>
               <div className="flex gap-5 items-start glass-panel p-5 rounded-2xl border border-border/50">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-app">4</div>
-                <p className="text-foreground leading-relaxed pt-2">Reels downloader automatically sync your reel and creates a downloadable link.</p>
+                <p className="text-foreground leading-relaxed pt-2">Audio downloader automatically sync your reel and creates a downloadable MP3 link.</p>
               </div>
               <div className="flex gap-5 items-start glass-panel p-5 rounded-2xl border border-border/50">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-app">5</div>
-                <p className="text-foreground leading-relaxed pt-2">Hit on the start button to download. See how it is easy!</p>
+                <p className="text-foreground leading-relaxed pt-2">Hit on the download button to save the audio. See how easy it is!</p>
               </div>
             </div>
           </div>
