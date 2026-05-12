@@ -257,10 +257,21 @@ async function resolveInstagramMedia(url: string) {
                                mediaData?.music_metadata?.music_info?.music ||
                                mediaData?.music_info?.music_consumption_info;
               
-              const audioUrl = musicData?.fast_start_progressive_download_url || 
+              let audioUrl = musicData?.fast_start_progressive_download_url || 
                                musicData?.progressive_download_url ||
-                               mediaData?.audio_url ||
-                               videoUrl;
+                               mediaData?.audio_url;
+
+              // Force extraction from DASH manifest for genuine audio-only stream
+              if (!audioUrl && mediaData?.video_dash_manifest) {
+                const dashManifest = mediaData.video_dash_manifest;
+                const audioMatch = dashManifest.match(/<BaseURL[^>]*>(https?:\/\/[^<]+mime=audio[^<]+)<\/BaseURL>/i);
+                if (audioMatch) {
+                  audioUrl = audioMatch[1].replace(/&amp;/g, "&");
+                }
+              }
+
+              // Final fallback
+              audioUrl = audioUrl || videoUrl;
               return {
                 id: shortcode,
                 title: `Instagram Reel ${shortcode}`,
