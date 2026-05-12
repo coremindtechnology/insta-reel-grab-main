@@ -13,6 +13,7 @@ import {
   Sun,
   Video,
   Share2,
+  RotateCcw,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -379,76 +380,75 @@ function Index() {
           {/* Results Section - Immersive Vertical Preview */}
           {media && (
             <div id="results" className="animate-rise space-y-8 max-w-4xl mx-auto w-full pt-8">
-              <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
-                
-                {/* Vertical Reel Preview */}
-                <div className="w-full lg:w-auto flex-shrink-0 mx-auto">
-                  <div className="glass-panel rounded-[2rem] p-3 border-primary/20 shadow-2xl bg-card/40 backdrop-blur-3xl relative overflow-hidden group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-b from-primary/20 to-secondary/20 rounded-[2rem] blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-                    <div className="relative overflow-hidden rounded-[1.75rem] border border-border/50 bg-black shadow-inner aspect-[9/16] w-full max-w-[320px] mx-auto md:max-w-[380px]">
-                      <div className="relative h-full w-full flex items-center justify-center">
-                        {!isPlaying ? (
-                          <>
-                            <img 
-                              src={`${API_BASE_URL}/api/download?url=${encodeURIComponent(media.thumbnailUrl)}&filename=thumb.jpg`} 
-                              alt={`Preview for ${media.title}`} 
-                              className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-110" 
-                              loading="lazy" 
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <button 
-                                onClick={() => setIsPlaying(true)}
-                                className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/95 text-white backdrop-blur-md shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 group/play"
-                              >
-                                <div className="ml-1.5 border-y-[14px] border-y-transparent border-l-[24px] border-l-white drop-shadow-lg" />
-                              </button>
-                            </div>
-                            
-                            {/* Reel Meta Overlay (Like Instagram) */}
-                            <div className="absolute bottom-6 left-6 right-6 text-white text-left pointer-events-none">
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 p-0.5">
-                                  <div className="h-full w-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                                    <Instagram className="h-4 w-4 text-white" />
-                                  </div>
-                                </div>
-                                <span className="text-sm font-bold drop-shadow-md">instagram_reel</span>
+              {mode === "reels" ? (
+                <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
+                  {/* Vertical Reel Preview */}
+                  <div className="w-full lg:w-auto flex-shrink-0 mx-auto">
+                    <div className="glass-panel rounded-[2rem] p-3 border-primary/20 shadow-2xl bg-card/40 backdrop-blur-3xl relative overflow-hidden group">
+                      <div className="absolute -inset-0.5 bg-gradient-to-b from-primary/20 to-secondary/20 rounded-[2rem] blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+                      <div className="relative overflow-hidden rounded-[1.75rem] border border-border/50 bg-black shadow-inner aspect-[9/16] w-full max-w-[320px] mx-auto md:max-w-[380px]">
+                        <div className="relative h-full w-full flex items-center justify-center">
+                          {!isPlaying ? (
+                            <>
+                              <img
+                                src={`${API_BASE_URL}/api/download?url=${encodeURIComponent(media.thumbnailUrl)}&filename=thumb.jpg`}
+                                alt={`Preview for ${media.title}`}
+                                className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-110"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <button
+                                  onClick={() => setIsPlaying(true)}
+                                  className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/95 text-white backdrop-blur-md shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 group/play"
+                                >
+                                  <div className="ml-1.5 border-y-[14px] border-y-transparent border-l-[24px] border-l-white drop-shadow-lg" />
+                                </button>
                               </div>
-                              <p className="text-xs line-clamp-2 drop-shadow-md opacity-90">{media.title}</p>
-                            </div>
-                          </>
-                        ) : (
-                          <video 
-                            src={`${API_BASE_URL}/api/download?url=${encodeURIComponent(media.videoUrl)}&filename=preview.mp4`}
-                            controls 
-                            autoPlay 
-                            className="h-full w-full object-cover rounded-[1.75rem]"
-                          />
-                        )}
+
+                              {/* Reel Meta Overlay (Like Instagram) */}
+                              <div className="absolute bottom-6 left-6 right-6 text-white text-left pointer-events-none">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 p-0.5">
+                                    <div className="h-full w-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                                      <Instagram className="h-4 w-4 text-white" />
+                                    </div>
+                                  </div>
+                                  <span className="text-sm font-bold drop-shadow-md">instagram_reel</span>
+                                </div>
+                                <p className="text-xs line-clamp-2 drop-shadow-md opacity-90">{media.title}</p>
+                              </div>
+                            </>
+                          ) : (
+                            <video
+                              src={`${API_BASE_URL}/api/download?url=${encodeURIComponent(media.videoUrl)}&filename=preview.mp4`}
+                              controls
+                              autoPlay
+                              className="h-full w-full object-cover rounded-[1.75rem]"
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Download Options & Details */}
-                <div className="flex-1 w-full space-y-6 pt-4 lg:pt-10">
-                  <div className="space-y-4">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary tracking-wide uppercase">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Media Ready
+                  {/* Download Options & Details */}
+                  <div className="flex-1 w-full space-y-6 pt-4 lg:pt-10">
+                    <div className="space-y-4">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary tracking-wide uppercase">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Media Ready
+                      </div>
+                      <h3 className="font-black text-foreground text-3xl sm:text-4xl leading-tight tracking-tight">{media.title}</h3>
+                      <p className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        Verified high-quality source • {new Date(media.processedAt).toLocaleDateString()}
+                      </p>
                     </div>
-                    <h3 className="font-black text-foreground text-3xl sm:text-4xl leading-tight tracking-tight">{media.title}</h3>
-                    <p className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
-                      <ShieldCheck className="h-4 w-4 text-primary" />
-                      Verified high-quality source • {new Date(media.processedAt).toLocaleDateString()}
-                    </p>
-                  </div>
 
-                  <div className="h-px w-full bg-gradient-to-r from-border/50 via-border to-transparent"></div>
-                  
-                  <div className="grid gap-5">
-                    {mode === "reels" && (
+                    <div className="h-px w-full bg-gradient-to-r from-border/50 via-border to-transparent"></div>
+
+                    <div className="grid gap-5">
                       <div className="space-y-2">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Video Download</p>
                         <Button
@@ -462,34 +462,74 @@ function Index() {
                           <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">1080p</div>
                         </Button>
                       </div>
-                    )}
-                    {mode === "audio" && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Audio Extraction</p>
-                        <Button
-                          variant="instagram"
-                          size="lg"
-                          className="w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group"
-                          onClick={() => openDownload(media, "audio")}
-                        >
-                          <FileAudio className="mr-3 h-7 w-7 text-white transition-transform group-hover:scale-110" />
-                          Download Audio (MP3)
-                          <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">320kbps</div>
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-secondary/20 rounded-2xl p-4 border border-border/50 flex items-start gap-3">
-                    <div className="mt-1 bg-primary/20 p-1.5 rounded-lg text-primary">
-                      <CheckCircle2 className="h-4 w-4" />
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Your download will start automatically via our high-speed proxy server. No watermarks will be added to the final file.
-                    </p>
+
+                    <div className="bg-secondary/20 rounded-2xl p-4 border border-border/50 flex items-start gap-3">
+                      <div className="mt-1 bg-primary/20 p-1.5 rounded-lg text-primary">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Your download will start automatically via our high-speed proxy server. No watermarks will be added to the final file.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="glass-panel rounded-3xl p-6 sm:p-8 max-w-2xl mx-auto shadow-2xl border border-border/50 bg-card/60 backdrop-blur-3xl space-y-6">
+                  <div className="flex items-start gap-5">
+                    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl border border-border shadow-lg relative group">
+                      <img
+                        src={`${API_BASE_URL}/api/download?url=${encodeURIComponent(media.thumbnailUrl)}&filename=thumb.jpg`}
+                        alt="Thumbnail"
+                        className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <div className="border-y-[6px] border-y-transparent border-l-[10px] border-l-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0 pt-1">
+                      <h3 className="font-bold text-lg truncate text-foreground leading-tight">{media.title}</h3>
+                      <p className="text-xs text-primary font-black uppercase tracking-widest mt-2 flex items-center gap-1.5">
+                        <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                        High Quality Audio
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <audio
+                      src={`${API_BASE_URL}/api/download?url=${encodeURIComponent(media.audioUrl)}&filename=preview.mp3`}
+                      controls
+                      className="w-full h-11"
+                    />
+                  </div>
+
+                  <div className="grid gap-3.5 pt-4">
+                    <Button
+                      variant="instagram"
+                      size="lg"
+                      className="w-full h-14 text-lg font-black rounded-2xl shadow-app-lg transition-all active:scale-[0.98] bg-blue-600 hover:bg-blue-700 border-none"
+                      onClick={() => openDownload(media, "audio")}
+                    >
+                      <Download className="mr-2 h-6 w-6" />
+                      Download Audio
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full h-14 text-lg font-black rounded-2xl border-2 border-green-500/20 text-green-600 hover:bg-green-500 hover:text-white transition-all active:scale-[0.98]"
+                      onClick={() => {
+                        setMedia(null);
+                        setUrl("");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                    >
+                      <RotateCcw className="mr-2 h-6 w-6" />
+                      Download Again
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           

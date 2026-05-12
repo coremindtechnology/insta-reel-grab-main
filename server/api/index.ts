@@ -181,6 +181,13 @@ async function resolveInstagramMedia(url: string) {
         if (url.startsWith('http')) return url;
       }
     }
+    
+    // Fallback: search for any URL with audio mime type
+    const mimeMatch = html.match(/https:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
+    if (mimeMatch) {
+       return mimeMatch[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
+    }
+    
     return null;
   };
 
