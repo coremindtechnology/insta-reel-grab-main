@@ -246,9 +246,12 @@ async function resolveInstagramMedia(url: string) {
           if (mediaData) {
             const videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url;
             if (videoUrl) {
-              const audioUrl = mediaData?.clips_metadata?.music_info?.music?.fast_start_progressive_download_url || 
-                               mediaData?.music_metadata?.music_info?.music?.fast_start_progressive_download_url ||
-                               mediaData?.music_info?.music_consumption_info?.fast_start_progressive_download_url ||
+              const musicData = mediaData?.clips_metadata?.music_info?.music || 
+                               mediaData?.music_metadata?.music_info?.music ||
+                               mediaData?.music_info?.music_consumption_info;
+              
+              const audioUrl = musicData?.fast_start_progressive_download_url || 
+                               musicData?.progressive_download_url ||
                                mediaData?.audio_url ||
                                videoUrl;
               return {
@@ -346,7 +349,13 @@ router.get("/download", async (req, res) => {
       res.status(206);
     }
 
-    const contentType = (response.headers["content-type"] as any) || "video/mp4";
+    let contentType = (response.headers["content-type"] as any);
+    if (filename.endsWith(".mp3")) {
+      contentType = "audio/mpeg";
+    } else if (!contentType) {
+      contentType = "video/mp4";
+    }
+    
     const contentRange = response.headers["content-range"] as any;
     const contentLength = (response.headers["content-length"] as any);
 

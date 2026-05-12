@@ -463,19 +463,21 @@ function Index() {
                         </Button>
                       </div>
                     )}
-                    <div className="space-y-2">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Audio Extraction</p>
-                      <Button
-                        variant={mode === "audio" ? "instagram" : "outline"}
-                        size="lg"
-                        className={`w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group ${mode === "audio" ? "" : "border-2 border-primary/20"}`}
-                        onClick={() => openDownload(media, "audio")}
-                      >
-                        <FileAudio className={`mr-3 h-7 w-7 transition-transform group-hover:scale-110 ${mode === "audio" ? "text-white" : "text-primary"}`} />
-                        Download Audio (MP3)
-                        <div className={`ml-auto px-3 py-1 rounded-lg text-xs font-bold ${mode === "audio" ? "bg-white/20" : "bg-primary/10 text-primary"}`}>320kbps</div>
-                      </Button>
-                    </div>
+                    {mode === "audio" && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Audio Extraction</p>
+                        <Button
+                          variant="instagram"
+                          size="lg"
+                          className="w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group"
+                          onClick={() => openDownload(media, "audio")}
+                        >
+                          <FileAudio className="mr-3 h-7 w-7 text-white transition-transform group-hover:scale-110" />
+                          Download Audio (MP3)
+                          <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">320kbps</div>
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-secondary/20 rounded-2xl p-4 border border-border/50 flex items-start gap-3">
