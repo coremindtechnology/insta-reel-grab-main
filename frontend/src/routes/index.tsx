@@ -12,6 +12,7 @@ import {
   Sparkles,
   Sun,
   Video,
+  Share2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -96,6 +97,7 @@ function Index() {
   const [error, setError] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastProcessedUrl, setLastProcessedUrl] = useState("");
+  const [mode, setMode] = useState<"reels" | "audio">("audio");
 
   const validUrl = useMemo(() => (url ? isInstagramUrlInput(url) : false), [url]);
 
@@ -212,24 +214,76 @@ function Index() {
     }
   }
 
+  const handleShare = async () => {
+    const shareData = {
+      title: "ReelSave.App - Instagram Downloader",
+      text: "Download Instagram Reels and Audio for free in high quality!",
+      url: window.location.origin,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        toast.success("Website link copied to clipboard!");
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        console.error("Share failed:", err);
+      }
+    }
+  };
+
   return (
     <main className="relative min-h-screen overflow-hidden px-4 py-5 text-foreground sm:px-6 lg:px-8">
-      <div className="aurora-field pointer-events-none absolute left-1/2 top-0 h-72 w-[70rem] -translate-x-1/2 rounded-full opacity-80" />
-      <div className="relative mx-auto flex min-h-[calc(100vh-2.5rem)] w-full flex-col">
-        <header className="flex items-center justify-between gap-4 py-3 max-w-4xl mx-auto w-full">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-app">
-              <Instagram className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">InstaFetch</p>
-              <p className="text-xs text-muted-foreground">Premium Audio Extractor</p>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 h-16 flex items-center justify-center">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center gap-1 cursor-pointer" onClick={() => window.location.reload()}>
+            <span className="text-xl font-black text-primary">ReelSave</span>
+            <span className="text-xl font-black text-foreground">.App</span>
+          </div>
+
+          <div className="flex items-center gap-3 sm:gap-6">
+            <nav className="flex items-center gap-1 sm:gap-4">
+              <button
+                onClick={() => setMode("reels")}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-300 ${mode === "reels" ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Video className="h-5 w-5" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Reels</span>
+              </button>
+              <button
+                onClick={() => setMode("audio")}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-300 ${mode === "audio" ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <FileAudio className="h-5 w-5" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Audio</span>
+              </button>
+            </nav>
+
+            <div className="h-6 w-px bg-border/50 mx-1"></div>
+
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 text-muted-foreground" onClick={handleShare}>
+                <Share2 className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full h-10 w-10 text-muted-foreground"
+                aria-label="Toggle dark mode"
+                onClick={() => setIsDark((value) => !value)}
+              >
+                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </Button>
             </div>
           </div>
-          <Button variant="glass" size="icon" aria-label="Toggle dark mode" onClick={() => setIsDark((value) => !value)}>
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-        </header>
+        </div>
+      </header>
+
+      <div className="aurora-field pointer-events-none absolute left-1/2 top-0 h-72 w-[70rem] -translate-x-1/2 rounded-full opacity-80" />
+      <div className="relative mx-auto flex min-h-[calc(100vh-2.5rem)] w-full flex-col pt-20">
 
         <section className="flex-1 space-y-8 py-8 lg:py-12 w-full">
 
@@ -242,10 +296,20 @@ function Index() {
 
             <div className="space-y-4">
               <h1 className="text-4xl font-black leading-tight tracking-normal text-foreground sm:text-5xl lg:text-6xl mx-auto">
-                Extract Reel <span className="text-gradient-instagram">Audio (MP3)</span>
+                {mode === "reels" ? (
+                  <>
+                    Download Instagram <span className="text-gradient-instagram">Reels Video</span>
+                  </>
+                ) : (
+                  <>
+                    Extract Reel <span className="text-gradient-instagram">Audio (MP3)</span>
+                  </>
+                )}
               </h1>
               <p className="max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg mx-auto">
-                Paste a public Instagram Reel or Post URL to extract and download high-quality MP3 audio instantly.
+                {mode === "reels"
+                  ? "Download high-quality Instagram Reels and videos instantly without watermark."
+                  : "Paste a public Instagram Reel or Post URL to extract and download high-quality MP3 audio instantly."}
               </p>
             </div>
 
@@ -291,8 +355,8 @@ function Index() {
 
               <div className="mt-5">
                   <Button variant="instagram" size="lg" className="w-full" disabled={isProcessing} onClick={processUrl}>
-                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    Get Audio Link
+                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "reels" ? <Download className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                    {mode === "reels" ? "Download Video" : "Get Audio Link"}
                   </Button>
               </div>
 
@@ -384,17 +448,32 @@ function Index() {
                   <div className="h-px w-full bg-gradient-to-r from-border/50 via-border to-transparent"></div>
                   
                   <div className="grid gap-5">
+                    {mode === "reels" && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Video Download</p>
+                        <Button
+                          variant="instagram"
+                          size="lg"
+                          className="w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group"
+                          onClick={() => openDownload(media, "video")}
+                        >
+                          <Video className="mr-3 h-7 w-7 text-white group-hover:scale-110 transition-transform" />
+                          Download Video (MP4)
+                          <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">1080p</div>
+                        </Button>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Audio Extraction</p>
-                      <Button 
-                        variant="instagram" 
-                        size="lg" 
-                        className="w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group" 
+                      <Button
+                        variant={mode === "audio" ? "instagram" : "outline"}
+                        size="lg"
+                        className={`w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group ${mode === "audio" ? "" : "border-2 border-primary/20"}`}
                         onClick={() => openDownload(media, "audio")}
                       >
-                        <FileAudio className="mr-3 h-7 w-7 text-white group-hover:scale-110 transition-transform" />
+                        <FileAudio className={`mr-3 h-7 w-7 transition-transform group-hover:scale-110 ${mode === "audio" ? "text-white" : "text-primary"}`} />
                         Download Audio (MP3)
-                        <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">320kbps</div>
+                        <div className={`ml-auto px-3 py-1 rounded-lg text-xs font-bold ${mode === "audio" ? "bg-white/20" : "bg-primary/10 text-primary"}`}>320kbps</div>
                       </Button>
                     </div>
                   </div>
