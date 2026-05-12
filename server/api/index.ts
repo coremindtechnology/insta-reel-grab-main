@@ -166,6 +166,24 @@ async function resolveInstagramMedia(url: string) {
     return videoUrl;
   };
 
+  const extractAudioFromHtml = (html: string) => {
+    if (!html) return null;
+    const audioPatterns = [
+      /"audio_url":"([^"]+)"/,
+      /"progressive_download_url":"([^"]+)"/,
+      /audio_url\\":\\"([^\\"]+)\\"/,
+      /"fast_start_progressive_download_url":"([^"]+)"/
+    ];
+    for (const pattern of audioPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        const url = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
+        if (url.startsWith('http')) return url;
+      }
+    }
+    return null;
+  };
+
   const sources = [
     { name: "Embed", url: `https://www.instagram.com/reels/${shortcode}/embed/` },
     { name: "Embed Captioned", url: `https://www.instagram.com/reels/${shortcode}/embed/captioned/` },
@@ -192,7 +210,7 @@ async function resolveInstagramMedia(url: string) {
           if (videoUrl) {
             const $ = cheerio.load(data);
             const thumbUrl = $('meta[property="og:image"]').attr('content') || `https://www.instagram.com/p/${shortcode}/media/?size=l`;
-            const audioUrl = videoUrl; // Fallback to video URL if dedicated audio not found
+            const audioUrl = extractAudioFromHtml(data) || videoUrl;
             return {
               id: shortcode,
               title: `Instagram Reel ${shortcode}`,
@@ -230,6 +248,8 @@ async function resolveInstagramMedia(url: string) {
             if (videoUrl) {
               const audioUrl = mediaData?.clips_metadata?.music_info?.music?.fast_start_progressive_download_url || 
                                mediaData?.music_metadata?.music_info?.music?.fast_start_progressive_download_url ||
+                               mediaData?.music_info?.music_consumption_info?.fast_start_progressive_download_url ||
+                               mediaData?.audio_url ||
                                videoUrl;
               return {
                 id: shortcode,

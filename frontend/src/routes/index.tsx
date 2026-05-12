@@ -223,7 +223,7 @@ function Index() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">InstaFetch</p>
-              <p className="text-xs text-muted-foreground">Instagram Audio Downloader</p>
+              <p className="text-xs text-muted-foreground">Premium Audio Extractor</p>
             </div>
           </div>
           <Button variant="glass" size="icon" aria-label="Toggle dark mode" onClick={() => setIsDark((value) => !value)}>
@@ -242,7 +242,7 @@ function Index() {
 
             <div className="space-y-4">
               <h1 className="text-4xl font-black leading-tight tracking-normal text-foreground sm:text-5xl lg:text-6xl mx-auto">
-                Instagram Audio <span className="text-gradient-instagram">Downloader</span>
+                Extract Reel <span className="text-gradient-instagram">Audio (MP3)</span>
               </h1>
               <p className="max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg mx-auto">
                 Paste a public Instagram Reel or Post URL to extract and download high-quality MP3 audio instantly.
@@ -290,10 +290,10 @@ function Index() {
               ) : null}
 
               <div className="mt-5">
-                <Button variant="instagram" size="lg" className="w-full" disabled={isProcessing} onClick={processUrl}>
-                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                  Download
-                </Button>
+                  <Button variant="instagram" size="lg" className="w-full" disabled={isProcessing} onClick={processUrl}>
+                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    Get Audio Link
+                  </Button>
               </div>
 
               {/* Progress Bar inside the card */}
