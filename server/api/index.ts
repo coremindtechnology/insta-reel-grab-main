@@ -270,6 +270,15 @@ async function resolveInstagramMedia(url: string) {
                 }
               }
 
+              // Even deeper search in the entire media object for any audio-only URL
+              if (!audioUrl) {
+                const mediaStr = JSON.stringify(mediaData);
+                const anyAudioUrl = mediaStr.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
+                if (anyAudioUrl) {
+                   audioUrl = anyAudioUrl[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
+                }
+              }
+
               // Final fallback
               audioUrl = audioUrl || videoUrl;
               return {
