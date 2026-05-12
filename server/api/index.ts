@@ -168,14 +168,16 @@ async function resolveInstagramMedia(url: string) {
 
   const extractAudioFromHtml = (html: string) => {
     if (!html) return null;
+    const cleanHtml = html.replace(/\\\//g, "/");
     const audioPatterns = [
       /"audio_url":"([^"]+)"/,
       /"progressive_download_url":"([^"]+)"/,
       /audio_url\\":\\"([^\\"]+)\\"/,
-      /"fast_start_progressive_download_url":"([^"]+)"/
+      /"fast_start_progressive_download_url":"([^"]+)"/,
+      /"play_url":"([^"]+)"/
     ];
     for (const pattern of audioPatterns) {
-      const match = html.match(pattern);
+      const match = cleanHtml.match(pattern);
       if (match) {
         const url = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
         if (url.startsWith('http')) return url;
@@ -183,7 +185,7 @@ async function resolveInstagramMedia(url: string) {
     }
     
     // Fallback: search for any URL with audio mime type
-    const mimeMatch = html.match(/https:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
+    const mimeMatch = cleanHtml.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
     if (mimeMatch) {
        return mimeMatch[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
     }
@@ -259,20 +261,21 @@ async function resolveInstagramMedia(url: string) {
               
               let audioUrl = musicData?.fast_start_progressive_download_url || 
                                musicData?.progressive_download_url ||
+                               musicData?.play_url ||
                                mediaData?.audio_url;
 
               // Force extraction from DASH manifest for genuine audio-only stream
               if (!audioUrl && mediaData?.video_dash_manifest) {
-                const dashManifest = mediaData.video_dash_manifest;
-                const audioMatch = dashManifest.match(/<BaseURL[^>]*>(https?:\/\/[^<]+mime=audio[^<]+)<\/BaseURL>/i);
+                const dashManifest = mediaData.video_dash_manifest.replace(/&amp;/g, "&").replace(/\\\//g, "/");
+                const audioMatch = dashManifest.match(/https?:\/\/[^<" ]+mime=audio[^<" ]+/i);
                 if (audioMatch) {
-                  audioUrl = audioMatch[1].replace(/&amp;/g, "&");
+                  audioUrl = audioMatch[0];
                 }
               }
 
               // Even deeper search in the entire media object for any audio-only URL
               if (!audioUrl) {
-                const mediaStr = JSON.stringify(mediaData);
+                const mediaStr = JSON.stringify(mediaData).replace(/\\\//g, "/");
                 const anyAudioUrl = mediaStr.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
                 if (anyAudioUrl) {
                    audioUrl = anyAudioUrl[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
