@@ -67,7 +67,7 @@ function isInstagramUrl(value: string) {
 async function resolveInstagramMedia(url: string) {
   const shortcodeMatch = url.match(/\/(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
   const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
-  
+
   if (!shortcode) return null;
 
   const commonHeaders = {
@@ -84,7 +84,7 @@ async function resolveInstagramMedia(url: string) {
 
   const extractVideoFromHtml = (html: string, targetShortcode: string) => {
     if (!html) return null;
-    
+
     // Safety check: Ensure the HTML actually belongs to our Reel and isn't a login/home page
     // Instagram's home/login pages usually don't have the specific shortcode in the title or meta
     if (!html.includes(targetShortcode) && !html.includes("instagram.com/reels/videos/") && !html.includes("EmbedVideo")) {
@@ -96,9 +96,9 @@ async function resolveInstagramMedia(url: string) {
     let videoUrl = null;
 
     // 1. Try OG Meta Tags (Most reliable if present)
-    videoUrl = $('meta[property="og:video"]').attr('content') || 
-               $('meta[property="og:video:secure_url"]').attr('content') ||
-               $('meta[name="twitter:player"]').attr('content');
+    videoUrl = $('meta[property="og:video"]').attr('content') ||
+      $('meta[property="og:video:secure_url"]').attr('content') ||
+      $('meta[name="twitter:player"]').attr('content');
 
     // 2. Try LD+JSON
     if (!videoUrl) {
@@ -123,7 +123,7 @@ async function resolveInstagramMedia(url: string) {
           };
           videoUrl = search(data);
           if (videoUrl) return false; // break loop
-        } catch (e) {}
+        } catch (e) { }
       });
     }
 
@@ -183,13 +183,13 @@ async function resolveInstagramMedia(url: string) {
         if (url.startsWith('http')) return url;
       }
     }
-    
+
     // Fallback: search for any URL with audio mime type
     const mimeMatch = cleanHtml.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
     if (mimeMatch) {
-       return mimeMatch[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
+      return mimeMatch[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
     }
-    
+
     return null;
   };
 
@@ -213,8 +213,8 @@ async function resolveInstagramMedia(url: string) {
         if (status === 200 && data) {
           const videoUrl = extractVideoFromHtml(data, shortcode);
           if (videoUrl === "BLOCKED") {
-             console.warn(`Source ${source.name} was blocked by login.`);
-             continue;
+            console.warn(`Source ${source.name} was blocked by login.`);
+            continue;
           }
           if (videoUrl) {
             const $ = cheerio.load(data);
@@ -255,14 +255,14 @@ async function resolveInstagramMedia(url: string) {
           if (mediaData) {
             const videoUrl = mediaData?.video_versions?.[0]?.url || mediaData?.video_url;
             if (videoUrl) {
-              const musicData = mediaData?.clips_metadata?.music_info?.music || 
-                               mediaData?.music_metadata?.music_info?.music ||
-                               mediaData?.music_info?.music_consumption_info;
-              
-              let audioUrl = musicData?.fast_start_progressive_download_url || 
-                               musicData?.progressive_download_url ||
-                               musicData?.play_url ||
-                               mediaData?.audio_url;
+              const musicData = mediaData?.clips_metadata?.music_info?.music ||
+                mediaData?.music_metadata?.music_info?.music ||
+                mediaData?.music_info?.music_consumption_info;
+
+              let audioUrl = musicData?.fast_start_progressive_download_url ||
+                musicData?.progressive_download_url ||
+                musicData?.play_url ||
+                mediaData?.audio_url;
 
               // Force extraction from DASH manifest for genuine audio-only stream
               if (!audioUrl && mediaData?.video_dash_manifest) {
@@ -278,7 +278,7 @@ async function resolveInstagramMedia(url: string) {
                 const mediaStr = JSON.stringify(mediaData).replace(/\\\//g, "/");
                 const anyAudioUrl = mediaStr.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
                 if (anyAudioUrl) {
-                   audioUrl = anyAudioUrl[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
+                  audioUrl = anyAudioUrl[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
                 }
               }
 
@@ -296,7 +296,7 @@ async function resolveInstagramMedia(url: string) {
             }
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
   } catch (err) {
@@ -316,8 +316,8 @@ router.get("/", (req, res) => {
 
 // Informational GET routes for POST-only endpoints
 router.get("/process", (req, res) => {
-  res.status(405).json({ 
-    error: "Method Not Allowed", 
+  res.status(405).json({
+    error: "Method Not Allowed",
     message: "This endpoint requires a POST request with a JSON body containing the Instagram URL.",
     example: { url: "https://www.instagram.com/reel/..." }
   });
@@ -385,7 +385,7 @@ router.get("/download", async (req, res) => {
     } else if (!contentType) {
       contentType = "video/mp4";
     }
-    
+
     const contentRange = response.headers["content-range"] as any;
     const contentLength = (response.headers["content-length"] as any);
 
@@ -394,7 +394,7 @@ router.get("/download", async (req, res) => {
     if (contentRange) res.setHeader("Content-Range", contentRange);
     if (contentLength) res.setHeader("Content-Length", contentLength);
     res.setHeader("Accept-Ranges", "bytes");
-    
+
     response.data.pipe(res);
   } catch (error) {
     res.status(500).send("Download failed.");
@@ -408,8 +408,8 @@ app.use("/", router);
 // Fallback 404 handler for debugging
 app.use((req, res) => {
   console.log(`404: ${req.method} ${req.url}`);
-  res.status(404).json({ 
-    error: "Not Found", 
+  res.status(404).json({
+    error: "Not Found",
     path: req.url,
     method: req.method,
     message: "The requested route does not exist on this server."

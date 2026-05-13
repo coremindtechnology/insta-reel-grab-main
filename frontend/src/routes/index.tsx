@@ -181,10 +181,10 @@ function Index() {
     const target = type === "video" ? item.videoUrl : item.audioUrl;
     const extension = type === "video" ? "mp4" : "mp3";
     const filename = `instafetch_${item.id}.${extension}`;
-    
+
     // Use the proxy download endpoint to force download
     const downloadUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(target)}&filename=${encodeURIComponent(filename)}`;
-    
+
     // Create a temporary link and trigger download
     const link = document.createElement("a");
     link.href = downloadUrl;
@@ -355,10 +355,10 @@ function Index() {
               ) : null}
 
               <div className="mt-5">
-                  <Button variant="instagram" size="lg" className="w-full" disabled={isProcessing} onClick={processUrl}>
-                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "reels" ? <Download className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                    {mode === "reels" ? "Download Video" : "Get Audio Link"}
-                  </Button>
+                <Button variant="instagram" size="lg" className="w-full" disabled={isProcessing} onClick={processUrl}>
+                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "reels" ? <Download className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                  {mode === "reels" ? "Download Video" : "Get Audio Link"}
+                </Button>
               </div>
 
               {/* Progress Bar inside the card */}
@@ -532,7 +532,7 @@ function Index() {
               )}
             </div>
           )}
-          
+
           <div className="max-w-7xl mx-auto space-y-6 text-left animate-rise py-8 border-t border-border/50 w-full">
             <h2 className="text-2xl font-bold text-foreground">Instagram Reels Audio Download</h2>
             <div className="space-y-4 text-muted-foreground leading-relaxed">
@@ -587,11 +587,11 @@ function Index() {
               <div className="text-center space-y-4">
                 <h2 className="text-3xl font-black text-primary">Ways to Download Instagram Audio</h2>
                 <p className="max-w-4xl mx-auto text-muted-foreground">
-                  InstaFetch provides an easy way to extract audio from Instagram Reels. Just follow these simple steps to download MP3s. 
+                  InstaFetch provides an easy way to extract audio from Instagram Reels. Just follow these simple steps to download MP3s.
                   We guide you with images to make it even easier to understand the process.
                 </p>
               </div>
-              
+
               <div className="grid gap-12 sm:grid-cols-3">
                 <div className="flex flex-col items-center text-center space-y-6">
                   <h3 className="text-xl font-bold text-primary">Reels to Download</h3>
@@ -635,7 +635,7 @@ function Index() {
                 </div>
               </div>
             </div>
-            
+
             <div className="lg:w-1/2 space-y-6">
               <h2 className="text-3xl sm:text-4xl font-black text-foreground leading-tight">
                 Download Instagram Audio <span className="text-primary">in High Quality MP3</span>
