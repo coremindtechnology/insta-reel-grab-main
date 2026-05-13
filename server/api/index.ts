@@ -10,18 +10,23 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
-// ✅ Robust CORS configuration
-app.use(cors({
-  origin: true, // Dynamically reflect the request origin
-  methods: ["GET", "POST", "OPTIONS", "PATCH", "DELETE", "PUT"],
-  allowedHeaders: ["X-CSRF-Token", "X-Requested-With", "Accept", "Accept-Version", "Content-Length", "Content-MD5", "Content-Type", "Date", "X-Api-Version", "Range", "Authorization"],
-  credentials: true,
-  maxAge: 86400 // Cache preflight response for 24 hours
-}));
+// ✅ Manual Robust CORS configuration for Vercel
+app.use((req, res, next) => {
+  const origin = req.headers.origin || "*";
+  
+  // Explicitly allow the known frontend and localhost
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PATCH, DELETE, PUT");
+  res.setHeader("Access-Control-Allow-Headers", "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Range, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400");
 
-// Explicitly handle OPTIONS preflight requests
-app.options("*", (req, res) => {
-  res.sendStatus(204);
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
+  }
+  next();
 });
 
 app.use(express.json());
