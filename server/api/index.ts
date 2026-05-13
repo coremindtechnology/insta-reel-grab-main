@@ -70,8 +70,7 @@ async function resolveInstagramMedia(url: string) {
 
   if (!shortcode) return null;
 
-  const commonHeaders = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
     "Sec-Fetch-Mode": "navigate",
@@ -79,7 +78,8 @@ async function resolveInstagramMedia(url: string) {
     "Sec-Fetch-User": "?1",
     "Sec-Fetch-Dest": "document",
     "Upgrade-Insecure-Requests": "1",
-    "Referer": "https://www.instagram.com/"
+    "Referer": "https://www.instagram.com/",
+    "Cache-Control": "max-age=0"
   };
 
   const extractVideoFromHtml = (html: string, targetShortcode: string) => {
@@ -172,9 +172,10 @@ async function resolveInstagramMedia(url: string) {
       const { data } = await axios.get(audioPageUrl, {
         headers: {
           ...commonHeaders,
-          "X-IG-App-ID": "936619743392459"
+          "X-IG-App-ID": "936619743392459",
+          "Sec-Fetch-Site": "same-origin"
         },
-        timeout: 8000
+        timeout: 5000
       });
       if (!data) return null;
       
@@ -200,7 +201,12 @@ async function resolveInstagramMedia(url: string) {
       /"base_url":"([^"]+mime=audio[^"]+)"/,
       /"original_sound_info":\{[^}]*"progressive_download_url":"([^"]+)"/,
       /"music_info":\{[^}]*"progressive_download_url":"([^"]+)"/,
-      /https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g
+      /"audio_source":\{[^}]*"url":"([^"]+)"/,
+      /"audio_asset":\{[^}]*"url":"([^"]+)"/,
+      /https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g,
+      /https?:\/\/[^"\\ ]+&mime=audio[^"\\ ]+/g,
+      /https?:\/\/[^"\\ ]+\.mp3[^"\\ ]*/g,
+      /https?:\/\/[^"\\ ]+\.m4a[^"\\ ]*/g
     ];
 
     for (const pattern of audioPatterns) {
@@ -231,23 +237,15 @@ async function resolveInstagramMedia(url: string) {
     for (const pattern of dashPatterns) {
       const match = cleanHtml.match(pattern);
       if (match) {
-        if (match[0].startsWith("<BaseURL>")) {
-          console.log("Found audio in BaseURL tag");
-          return match[1].replace(/&amp;/g, "&");
-        } else {
-          const manifest = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "").replace(/\\\//g, "/");
-          // Deeper DASH parsing for audio representation
-          const audioRepresentation = manifest.match(/<Representation[^>]+mimeType="audio\/[^"]+"[^>]*>([\s\S]*?)<BaseURL>([^<]+)<\/BaseURL>/i);
-          if (audioRepresentation) {
-            console.log("Found audio in DASH Representation");
-            return audioRepresentation[2].replace(/&amp;/g, "&");
+        try {
+          if (match[0].startsWith("<BaseURL>")) {
+            return match[1].replace(/&amp;/g, "&");
+          } else {
+            const manifest = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "").replace(/\\\//g, "/");
+            const audioInManifest = manifest.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/i);
+            if (audioInManifest) return audioInManifest[0].replace(/&amp;/g, "&");
           }
-          const audioInManifest = manifest.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/i);
-          if (audioInManifest) {
-            console.log("Found audio in DASH manifest string");
-            return audioInManifest[0].replace(/&amp;/g, "&");
-          }
-        }
+        } catch (e) {}
       }
     }
 
@@ -279,16 +277,14 @@ async function resolveInstagramMedia(url: string) {
       try {
         const { data, status } = await axios.get(source.url, {
           headers: commonHeaders,
-          timeout: 12000,
+          timeout: 10000,
           validateStatus: () => true
         });
 
         if (status === 200 && data) {
           const videoUrl = extractVideoFromHtml(data, shortcode);
-          if (videoUrl === "BLOCKED") {
-            console.warn(`Source ${source.name} was blocked by login.`);
-            continue;
-          }
+          if (videoUrl === "BLOCKED") continue;
+          
           if (videoUrl) {
             const $ = cheerio.load(data);
             const thumbUrl = $('meta[property="og:image"]').attr('content') || `https://www.instagram.com/p/${shortcode}/media/?size=l`;
@@ -296,22 +292,17 @@ async function resolveInstagramMedia(url: string) {
             
             // Fallback: Check for audio asset ID and fetch directly
             if (!audioUrl) {
-              console.log("Direct audio URL not found, searching for asset ID...");
               const assetIdMatch = data.match(/"audio_asset_id":"(\d+)"/) || 
                                    data.match(/"audio_id":"(\d+)"/) ||
-                                   data.match(/"canonical_id":"(\d+)"/);
+                                   data.match(/"canonical_id":"(\d+)"/) ||
+                                   data.match(/"music_id":"(\d+)"/) ||
+                                   data.match(/"original_audio_id":"(\d+)"/);
               if (assetIdMatch) {
-                console.log(`Found asset ID: ${assetIdMatch[1]}, fetching audio page...`);
                 audioUrl = await fetchAudioFromAssetId(assetIdMatch[1]);
               }
             }
 
-            if (!audioUrl) console.log("Still no audio URL, falling back to video URL.");
-            else console.log(`Audio URL found: ${audioUrl.substring(0, 50)}...`);
-
             audioUrl = audioUrl || videoUrl;
-            
-            // Check if audioUrl is actually just the videoUrl
             const isGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
 
             return {
@@ -331,12 +322,10 @@ async function resolveInstagramMedia(url: string) {
       }
     }
 
-    // Final Fallback: Mobile API with more variations
+    // Final Fallback: Mobile API
     const apiUrls = [
       `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=dis`,
-      `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`,
-      `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=1`,
-      `https://www.instagram.com/p/${shortcode}/?__a=1&__d=1`
+      `https://www.instagram.com/reels/${shortcode}/?__a=1&__d=1`
     ];
     for (const apiUrl of apiUrls) {
       try {
@@ -358,54 +347,31 @@ async function resolveInstagramMedia(url: string) {
                 musicData?.progressive_download_url ||
                 musicData?.play_url ||
                 mediaData?.audio_url ||
-                mediaData?.original_sound_info?.progressive_download_url ||
-                mediaData?.original_sound_info?.dash_manifest?.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/i)?.[0];
+                mediaData?.original_sound_info?.progressive_download_url;
 
-              // Fallback for Mobile API: Try asset ID if found
               if (!audioUrl) {
                 const assetId = musicData?.music_canonical_id || mediaData?.original_sound_info?.audio_asset_id;
-                if (assetId) {
-                  audioUrl = await fetchAudioFromAssetId(assetId);
-                }
+                if (assetId) audioUrl = await fetchAudioFromAssetId(assetId);
               }
 
-              // Force extraction from DASH manifest for genuine audio-only stream
-              if (!audioUrl && mediaData?.video_dash_manifest) {
-                const dashManifest = mediaData.video_dash_manifest.replace(/&amp;/g, "&").replace(/\\\//g, "/");
-                const audioMatch = dashManifest.match(/https?:\/\/[^<" ]+mime=audio[^<" ]+/i);
-                if (audioMatch) {
-                  audioUrl = audioMatch[0];
-                }
-              }
+              audioUrl = audioUrl || videoUrl;
+              const isGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
 
-              // Even deeper search in the entire media object for any audio-only URL
-              if (!audioUrl) {
-                const mediaStr = JSON.stringify(mediaData).replace(/\\\//g, "/");
-                const anyAudioUrl = mediaStr.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
-                if (anyAudioUrl) {
-                  audioUrl = anyAudioUrl[0].replace(/\\u0026/g, "&").replace(/\\/g, "");
-                }
-              }
-
-                audioUrl = audioUrl || videoUrl;
-                const isGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
-
-                return {
-                  id: shortcode,
-                  title: `Instagram Reel ${shortcode}`,
-                  videoUrl,
-                  thumbnailUrl: mediaData?.display_url || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
-                  audioUrl: audioUrl,
-                  isGenuineAudio: !!isGenuineAudio,
-                  sourceUrl: url,
-                  processedAt: new Date().toISOString(),
-                };
+              return {
+                id: shortcode,
+                title: `Instagram Reel ${shortcode}`,
+                videoUrl,
+                thumbnailUrl: mediaData?.display_url || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
+                audioUrl: audioUrl,
+                isGenuineAudio: !!isGenuineAudio,
+                sourceUrl: url,
+                processedAt: new Date().toISOString(),
+              };
             }
           }
         }
       } catch (e) { }
     }
-
   } catch (err) {
     console.error("Scraping error:", err);
   }
