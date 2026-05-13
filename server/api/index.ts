@@ -191,6 +191,7 @@ async function resolveInstagramMedia(url: string) {
     
     // 1. Try explicit audio patterns
     const audioPatterns = [
+      /"progressive_download_url":"([^"]+)","mime_type":"audio\/[^"]+"/,
       /"audio_url":"([^"]+)"/,
       /"progressive_download_url":"([^"]+)"/,
       /audio_url\\":\\"([^\\"]+)\\"/,
@@ -231,11 +232,21 @@ async function resolveInstagramMedia(url: string) {
       const match = cleanHtml.match(pattern);
       if (match) {
         if (match[0].startsWith("<BaseURL>")) {
-          return match[1];
+          console.log("Found audio in BaseURL tag");
+          return match[1].replace(/&amp;/g, "&");
         } else {
           const manifest = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "").replace(/\\\//g, "/");
+          // Deeper DASH parsing for audio representation
+          const audioRepresentation = manifest.match(/<Representation[^>]+mimeType="audio\/[^"]+"[^>]*>([\s\S]*?)<BaseURL>([^<]+)<\/BaseURL>/i);
+          if (audioRepresentation) {
+            console.log("Found audio in DASH Representation");
+            return audioRepresentation[2].replace(/&amp;/g, "&");
+          }
           const audioInManifest = manifest.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/i);
-          if (audioInManifest) return audioInManifest[0];
+          if (audioInManifest) {
+            console.log("Found audio in DASH manifest string");
+            return audioInManifest[0].replace(/&amp;/g, "&");
+          }
         }
       }
     }
@@ -245,7 +256,10 @@ async function resolveInstagramMedia(url: string) {
     if (progressiveMatch) {
       for (const url of progressiveMatch) {
         const cleanUrl = url.replace(/\\u0026/g, "&").replace(/\\/g, "");
-        if (cleanUrl.includes("audio")) return cleanUrl;
+        if (cleanUrl.includes("audio")) {
+          console.log("Found audio in progressive_download_url");
+          return cleanUrl;
+        }
       }
     }
 
@@ -282,11 +296,18 @@ async function resolveInstagramMedia(url: string) {
             
             // Fallback: Check for audio asset ID and fetch directly
             if (!audioUrl) {
-              const assetIdMatch = data.match(/"audio_asset_id":"(\d+)"/) || data.match(/"audio_id":"(\d+)"/);
+              console.log("Direct audio URL not found, searching for asset ID...");
+              const assetIdMatch = data.match(/"audio_asset_id":"(\d+)"/) || 
+                                   data.match(/"audio_id":"(\d+)"/) ||
+                                   data.match(/"canonical_id":"(\d+)"/);
               if (assetIdMatch) {
+                console.log(`Found asset ID: ${assetIdMatch[1]}, fetching audio page...`);
                 audioUrl = await fetchAudioFromAssetId(assetIdMatch[1]);
               }
             }
+
+            if (!audioUrl) console.log("Still no audio URL, falling back to video URL.");
+            else console.log(`Audio URL found: ${audioUrl.substring(0, 50)}...`);
 
             audioUrl = audioUrl || videoUrl;
             
