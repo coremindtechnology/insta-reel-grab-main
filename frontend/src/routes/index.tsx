@@ -54,6 +54,7 @@ type MediaResponse = {
   videoUrl: string;
   thumbnailUrl: string;
   audioUrl: string;
+  isGenuineAudio?: boolean;
   processedAt: string;
 };
 
@@ -179,7 +180,14 @@ function Index() {
 
   function openDownload(item: MediaResponse, type: "video" | "audio") {
     const target = type === "video" ? item.videoUrl : item.audioUrl;
-    const extension = type === "video" ? "mp4" : "mp3";
+    
+    // If it's audio but not genuine (just a video URL fallback), use .m4a as it's more honest for an MP4 container
+    // and works better on mobile players than an MP4 named as .mp3
+    let extension = type === "video" ? "mp4" : "mp3";
+    if (type === "audio" && !item.isGenuineAudio) {
+      extension = "m4a";
+    }
+    
     const filename = `instafetch_${item.id}.${extension}`;
 
     // Use the proxy download endpoint to force download
