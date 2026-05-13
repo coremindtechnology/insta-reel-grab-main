@@ -110,7 +110,7 @@ function Index() {
   useEffect(() => {
     const cleanUrl = sanitizeInstagramUrl(url);
     if (validUrl && !isProcessing && cleanUrl !== lastProcessedUrl) {
-      processUrl();
+      processUrl(false); // Do not auto-download on paste
       setLastProcessedUrl(cleanUrl);
     }
   }, [url, validUrl, isProcessing, lastProcessedUrl]);
@@ -137,7 +137,7 @@ function Index() {
     return () => window.clearInterval(interval);
   }, [isProcessing]);
 
-  async function processUrl() {
+  async function processUrl(autoDownload = false) {
     setError("");
     setMedia(null); // Reset media on new search
     setIsPlaying(false); // Reset player
@@ -162,10 +162,15 @@ function Index() {
         throw new Error(errorData.error || "Unable to process this Instagram URL.");
       }
 
-      const payload = await response.json();
+      const payload: MediaResponse = await response.json();
       setProgress(100);
       setMedia(payload);
       toast.success("Download options are ready");
+
+      // Auto-trigger download if requested and in audio mode
+      if (autoDownload && mode === "audio") {
+        openDownload(payload, "audio");
+      }
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "Unable to process this Instagram URL.";
       setError(message);
@@ -183,7 +188,7 @@ function Index() {
     
     // If it's audio but not genuine (just a video URL fallback), use .m4a as it's more honest for an MP4 container
     // and works better on mobile players than an MP4 named as .mp3
-    let extension = type === "video" ? "mp4" : "mp3";
+    let extension = type === "video" ? "mp4" : (item.isGenuineAudio ? "mp3" : "m4a");
     
     const filename = `instafetch_${item.id}.${extension}`;
 
@@ -360,9 +365,9 @@ function Index() {
               ) : null}
 
               <div className="mt-5">
-                <Button variant="instagram" size="lg" className="w-full" disabled={isProcessing} onClick={processUrl}>
+                <Button variant="instagram" size="lg" className="w-full" disabled={isProcessing} onClick={() => processUrl(true)}>
                   {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "reels" ? <Download className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                  {mode === "reels" ? "Download Video" : "Get Audio Link"}
+                  {mode === "reels" ? "Download Video" : "Download Audio"}
                 </Button>
               </div>
 
@@ -501,12 +506,21 @@ function Index() {
                     </div>
                   </div>
 
-                  <div className="pt-2">
+                  <div className="flex items-center gap-3 pt-2">
                     <audio
                       src={`${API_BASE_URL}/api/download?url=${encodeURIComponent(media.audioUrl)}&filename=preview.mp3`}
                       controls
-                      className="w-full h-11"
+                      className="flex-1 h-11"
                     />
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-11 w-11 rounded-xl shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                      onClick={() => openDownload(media, "audio")}
+                      title="Download MP3"
+                    >
+                      <Download className="h-5 w-5" />
+                    </Button>
                   </div>
 
                   <div className="grid gap-3.5 pt-4">
