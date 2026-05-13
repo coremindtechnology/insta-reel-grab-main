@@ -166,10 +166,30 @@ async function resolveInstagramMedia(url: string) {
     return videoUrl;
   };
 
+  const fetchAudioFromAssetId = async (assetId: string) => {
+    try {
+      const audioPageUrl = `https://www.instagram.com/reels/audio/${assetId}/`;
+      const { data } = await axios.get(audioPageUrl, {
+        headers: {
+          ...commonHeaders,
+          "X-IG-App-ID": "936619743392459"
+        },
+        timeout: 8000
+      });
+      if (!data) return null;
+      
+      const audioUrl = extractAudioFromHtml(data);
+      return audioUrl;
+    } catch (e) {
+      return null;
+    }
+  };
+
   const extractAudioFromHtml = (html: string) => {
     if (!html) return null;
     const cleanHtml = html.replace(/\\\//g, "/").replace(/&amp;/g, "&");
     
+    // 1. Try explicit audio patterns
     const audioPatterns = [
       /"audio_url":"([^"]+)"/,
       /"progressive_download_url":"([^"]+)"/,
@@ -187,7 +207,7 @@ async function resolveInstagramMedia(url: string) {
         const matches = cleanHtml.match(pattern);
         if (matches) {
           for (const match of matches) {
-            if (match.includes("mime=audio")) return match;
+            if (match.includes("mime=audio") || match.includes("audio")) return match;
           }
         }
         continue;
@@ -200,17 +220,32 @@ async function resolveInstagramMedia(url: string) {
       }
     }
 
-    // Try to find in DASH manifest if present in HTML
-    const dashMatch = cleanHtml.match(/<BaseURL>(https?:\/\/[^<]+mime=audio[^<]+)<\/BaseURL>/i) ||
-                     cleanHtml.match(/"dash_manifest":"([^"]+)"/);
-    
-    if (dashMatch) {
-      if (dashMatch[0].startsWith("<BaseURL>")) {
-        return dashMatch[1];
-      } else {
-        const manifest = dashMatch[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
-        const audioInManifest = manifest.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/i);
-        if (audioInManifest) return audioInManifest[0];
+    // 2. Try to find in DASH manifest if present in HTML
+    const dashPatterns = [
+      /<BaseURL>(https?:\/\/[^<]+mime=audio[^<]+)<\/BaseURL>/i,
+      /"dash_manifest":"([^"]+)"/,
+      /dash_manifest\\":\\"([^\\"]+)\\"/
+    ];
+
+    for (const pattern of dashPatterns) {
+      const match = cleanHtml.match(pattern);
+      if (match) {
+        if (match[0].startsWith("<BaseURL>")) {
+          return match[1];
+        } else {
+          const manifest = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "").replace(/\\\//g, "/");
+          const audioInManifest = manifest.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/i);
+          if (audioInManifest) return audioInManifest[0];
+        }
+      }
+    }
+
+    // 3. Search for any URL that looks like a progressive audio download
+    const progressiveMatch = cleanHtml.match(/https?:\/\/[^"\\ ]+progressive_download_url[^"\\ ]+/g);
+    if (progressiveMatch) {
+      for (const url of progressiveMatch) {
+        const cleanUrl = url.replace(/\\u0026/g, "&").replace(/\\/g, "");
+        if (cleanUrl.includes("audio")) return cleanUrl;
       }
     }
 
@@ -243,10 +278,20 @@ async function resolveInstagramMedia(url: string) {
           if (videoUrl) {
             const $ = cheerio.load(data);
             const thumbUrl = $('meta[property="og:image"]').attr('content') || `https://www.instagram.com/p/${shortcode}/media/?size=l`;
-            const audioUrl = extractAudioFromHtml(data) || videoUrl;
+            let audioUrl = extractAudioFromHtml(data);
+            
+            // Fallback: Check for audio asset ID and fetch directly
+            if (!audioUrl) {
+              const assetIdMatch = data.match(/"audio_asset_id":"(\d+)"/) || data.match(/"audio_id":"(\d+)"/);
+              if (assetIdMatch) {
+                audioUrl = await fetchAudioFromAssetId(assetIdMatch[1]);
+              }
+            }
+
+            audioUrl = audioUrl || videoUrl;
             
             // Check if audioUrl is actually just the videoUrl
-            const isGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio"));
+            const isGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
 
             return {
               id: shortcode,
@@ -295,6 +340,14 @@ async function resolveInstagramMedia(url: string) {
                 mediaData?.original_sound_info?.progressive_download_url ||
                 mediaData?.original_sound_info?.dash_manifest?.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/i)?.[0];
 
+              // Fallback for Mobile API: Try asset ID if found
+              if (!audioUrl) {
+                const assetId = musicData?.music_canonical_id || mediaData?.original_sound_info?.audio_asset_id;
+                if (assetId) {
+                  audioUrl = await fetchAudioFromAssetId(assetId);
+                }
+              }
+
               // Force extraction from DASH manifest for genuine audio-only stream
               if (!audioUrl && mediaData?.video_dash_manifest) {
                 const dashManifest = mediaData.video_dash_manifest.replace(/&amp;/g, "&").replace(/\\\//g, "/");
@@ -314,7 +367,7 @@ async function resolveInstagramMedia(url: string) {
               }
 
                 audioUrl = audioUrl || videoUrl;
-                const isGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio"));
+                const isGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
 
                 return {
                   id: shortcode,
