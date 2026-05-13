@@ -12,11 +12,17 @@ const port = process.env.PORT || 3001;
 
 // ✅ Robust CORS configuration
 app.use(cors({
-  origin: "*",
+  origin: true, // Dynamically reflect the request origin
   methods: ["GET", "POST", "OPTIONS", "PATCH", "DELETE", "PUT"],
   allowedHeaders: ["X-CSRF-Token", "X-Requested-With", "Accept", "Accept-Version", "Content-Length", "Content-MD5", "Content-Type", "Date", "X-Api-Version", "Range", "Authorization"],
-  credentials: true
+  credentials: true,
+  maxAge: 86400 // Cache preflight response for 24 hours
 }));
+
+// Explicitly handle OPTIONS preflight requests
+app.options("*", (req, res) => {
+  res.sendStatus(204);
+});
 
 app.use(express.json());
 
