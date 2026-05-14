@@ -220,56 +220,28 @@ async function resolveInstagramMedia(url: string) {
       /https?:\/\/[^"\\ ]+\.m4a[^"\\ ]*/g
     ];
 
-    for (const pattern of audioPatterns) {
-      if (pattern instanceof RegExp && pattern.global) {
-        const matches = cleanHtml.match(pattern);
-        if (matches) {
-          for (const match of matches) {
-            if (match.includes("mime=audio") || match.includes("audio")) return match;
+    // 4. Look for audio in scripts specifically
+    const scripts = cleanHtml.match(/<script[^>]*>([\s\S]*?)<\/script>/g);
+    if (scripts) {
+      for (const script of scripts) {
+        if (script.includes("audio_url") || script.includes("progressive_download_url") || script.includes("mime=audio")) {
+          for (const pattern of audioPatterns) {
+            if (pattern instanceof RegExp && !pattern.global) {
+              const match = script.match(pattern);
+              if (match) {
+                const url = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
+                if (url.startsWith('http')) return url;
+              }
+            }
           }
         }
-        continue;
-      }
-      
-      const match = cleanHtml.match(pattern as RegExp);
-      if (match) {
-        const url = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "");
-        if (url.startsWith('http')) return url;
       }
     }
 
-    // 2. Try to find in DASH manifest if present in HTML
-    const dashPatterns = [
-      /<BaseURL>(https?:\/\/[^<]+mime=audio[^<]+)<\/BaseURL>/i,
-      /"dash_manifest":"([^"]+)"/,
-      /dash_manifest\\":\\"([^\\"]+)\\"/
-    ];
-
-    for (const pattern of dashPatterns) {
-      const match = cleanHtml.match(pattern);
-      if (match) {
-        try {
-          if (match[0].startsWith("<BaseURL>")) {
-            return match[1].replace(/&amp;/g, "&");
-          } else {
-            const manifest = match[1].replace(/\\u0026/g, "&").replace(/\\/g, "").replace(/\\\//g, "/");
-            const audioInManifest = manifest.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/i);
-            if (audioInManifest) return audioInManifest[0].replace(/&amp;/g, "&");
-          }
-        } catch (e) {}
-      }
-    }
-
-    // 3. Search for any URL that looks like a progressive audio download
-    const progressiveMatch = cleanHtml.match(/https?:\/\/[^"\\ ]+progressive_download_url[^"\\ ]+/g);
-    if (progressiveMatch) {
-      for (const url of progressiveMatch) {
-        const cleanUrl = url.replace(/\\u0026/g, "&").replace(/\\/g, "");
-        if (cleanUrl.includes("audio")) {
-          console.log("Found audio in progressive_download_url");
-          return cleanUrl;
-        }
-      }
+    // 5. Final attempt: any URL with mime=audio
+    const allAudioUrls = cleanHtml.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/g);
+    if (allAudioUrls && allAudioUrls.length > 0) {
+      return allAudioUrls[0].replace(/\\u0026/g, "&").replace(/\\/g, "").replace(/&amp;/g, "&");
     }
 
     return null;
@@ -316,13 +288,23 @@ async function resolveInstagramMedia(url: string) {
             audioUrl = audioUrl || videoUrl;
             const isGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
 
+            // If we still don't have a genuine audio URL, try one more time by searching for "mime=audio" in the entire data
+            if (!isGenuineAudio) {
+              const extraAudioMatch = data.match(/https?:\/\/[^"\\ ]+mime=audio[^"\\ ]+/);
+              if (extraAudioMatch) {
+                audioUrl = extraAudioMatch[0].replace(/\\u0026/g, "&").replace(/\\/g, "").replace(/&amp;/g, "&");
+              }
+            }
+
+            const finalIsGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
+
             return {
               id: shortcode,
               title: `Instagram Reel ${shortcode}`,
               videoUrl,
               thumbnailUrl: thumbUrl,
               audioUrl: audioUrl,
-              isGenuineAudio: !!isGenuineAudio,
+              isGenuineAudio: !!finalIsGenuineAudio,
               sourceUrl: url,
               processedAt: new Date().toISOString(),
             };
