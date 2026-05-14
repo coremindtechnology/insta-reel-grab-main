@@ -458,34 +458,18 @@ function Index() {
                     <div className="h-px w-full bg-gradient-to-r from-border/50 via-border to-transparent"></div>
 
                     <div className="grid gap-5">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Video Download</p>
-                          <Button
-                            variant="instagram"
-                            size="lg"
-                            className="w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group"
-                            onClick={() => openDownload(media, "video")}
-                          >
-                            <Video className="mr-3 h-7 w-7 text-white group-hover:scale-110 transition-transform" />
-                            Download Video (MP4)
-                            <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">1080p</div>
-                          </Button>
-                        </div>
-
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Audio Download</p>
-                          <Button
-                            variant="outline"
-                            size="lg"
-                            className="w-full h-16 text-xl font-black shadow-app hover:translate-y-[-2px] transition-all duration-300 rounded-2xl border-2 border-primary/20 text-primary hover:bg-primary/5 group"
-                            onClick={() => openDownload(media, "audio")}
-                          >
-                            <FileAudio className="mr-3 h-7 w-7 group-hover:scale-110 transition-transform" />
-                            Download Audio (MP3)
-                            <div className="ml-auto bg-primary/10 px-3 py-1 rounded-lg text-xs font-bold">High Quality</div>
-                          </Button>
-                        </div>
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Video Download</p>
+                        <Button
+                          variant="instagram"
+                          size="lg"
+                          className="w-full h-16 text-xl font-black shadow-app-lg hover:translate-y-[-2px] transition-all duration-300 rounded-2xl group"
+                          onClick={() => openDownload(media, "video")}
+                        >
+                          <Video className="mr-3 h-7 w-7 text-white group-hover:scale-110 transition-transform" />
+                          Download Video (MP4)
+                          <div className="ml-auto bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">1080p</div>
+                        </Button>
                       </div>
                     </div>
 
