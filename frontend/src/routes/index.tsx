@@ -184,17 +184,29 @@ function Index() {
   }
 
   function openDownload(item: MediaResponse, type: "video" | "audio") {
-    const target = type === "video" ? item.videoUrl : item.audioUrl;
-    
-    // Enforce .mp3 extension for audio as requested
-    let extension = type === "video" ? "mp4" : "mp3";
-    
-    const filename = `instafetch_${item.id}.${extension}`;
+    if (type === "audio") {
+      // Agar genuine audio URL nahi mila toh warning dikhao
+      if (!item.isGenuineAudio) {
+        toast.warning("Is reel mein alag audio track nahi mila. Video ki audio download ho rahi hai (MP3 format mein).", { duration: 5000 });
+      }
+      
+      // Audio ke liye hamesha audioUrl use karo, MP3 filename ke sath
+      const filename = `instafetch_audio_${item.id}.mp3`;
+      const downloadUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(item.audioUrl)}&filename=${encodeURIComponent(filename)}&audioOnly=true`;
+      
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
 
-    // Use the proxy download endpoint to force download
-    const downloadUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(target)}&filename=${encodeURIComponent(filename)}`;
+    // Video download
+    const filename = `instafetch_${item.id}.mp4`;
+    const downloadUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(item.videoUrl)}&filename=${encodeURIComponent(filename)}`;
 
-    // Create a temporary link and trigger download
     const link = document.createElement("a");
     link.href = downloadUrl;
     link.setAttribute("download", filename);

@@ -296,7 +296,7 @@ async function resolveInstagramMedia(url: string) {
               }
             }
 
-            const finalIsGenuineAudio = audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
+            const finalIsGenuineAudio = audioUrl != null && audioUrl !== videoUrl && (audioUrl.includes("mime=audio") || audioUrl.includes(".mp3") || audioUrl.includes(".m4a") || audioUrl.includes("audio") || audioUrl.includes("progressive_download_url"));
 
             return {
               id: shortcode,
@@ -418,7 +418,9 @@ router.post("/process", async (req, res) => {
 
 router.get("/download", async (req, res) => {
   const mediaUrl = req.query.url as string;
-  const filename = req.query.filename as string || "download.mp4";
+  const audioOnly = req.query.audioOnly === "true";
+  // audioOnly=true hone par filename hamesha .mp3 hogi
+  let filename = req.query.filename as string || (audioOnly ? "download.mp3" : "download.mp4");
 
   if (!mediaUrl || mediaUrl === "undefined") {
     return res.status(400).send("Valid URL is required");
@@ -445,13 +447,18 @@ router.get("/download", async (req, res) => {
       res.status(206);
     }
 
-    let contentType = (response.headers["content-type"] as any);
-    if (filename.endsWith(".mp3")) {
+    // audioOnly=true hone par hamesha audio/mpeg force karo
+    let contentType: string;
+    if (audioOnly || filename.endsWith(".mp3")) {
       contentType = "audio/mpeg";
+      // Ensure filename ends with .mp3
+      if (!filename.endsWith(".mp3")) {
+        filename = filename.replace(/\.[^/.]+$/, "") + ".mp3";
+      }
     } else if (filename.endsWith(".m4a")) {
       contentType = "audio/mp4";
-    } else if (!contentType) {
-      contentType = "video/mp4";
+    } else {
+      contentType = (response.headers["content-type"] as string) || "video/mp4";
     }
 
     const contentRange = response.headers["content-range"] as any;
