@@ -236,7 +236,7 @@ function Index() {
     const shareData = {
       title: "ReelSave.App - Instagram Downloader",
       text: "Download Instagram Reels and Audio for free in high quality!",
-      url: window.location.origin,
+      url: "https://savereelaudio.vercel.app/",
     };
 
     try {
