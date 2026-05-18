@@ -213,11 +213,12 @@ function Index() {
   async function pasteFromClipboard() {
     try {
       const text = await navigator.clipboard.readText();
-      if (!isInstagramUrlInput(text)) {
-        toast.error("Clipboard does not contain a valid Instagram URL");
+      const trimmedText = text.trim();
+      if (!trimmedText) {
+        toast.error("Clipboard is empty.");
         return;
       }
-      setUrl(text.trim());
+      setUrl(trimmedText);
       toast.success("URL pasted");
     } catch (err: any) {
       console.error("Clipboard error:", err);
@@ -455,11 +456,7 @@ function Index() {
                         <Sparkles className="h-3.5 w-3.5" />
                         Media Ready
                       </div>
-                      <h3 className="font-black text-foreground text-3xl sm:text-4xl leading-tight tracking-tight">{media.title}</h3>
-                      <p className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
-                        <ShieldCheck className="h-4 w-4 text-primary" />
-                        Verified high-quality source • {new Date(media.processedAt).toLocaleDateString()}
-                      </p>
+                      <h3 className="font-black text-foreground text-3xl sm:text-4xl leading-tight tracking-tight">Download reel</h3>
                     </div>
 
                     <div className="h-px w-full bg-gradient-to-r from-border/50 via-border to-transparent"></div>
@@ -504,7 +501,7 @@ function Index() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
-                      <h3 className="font-bold text-lg truncate text-foreground leading-tight">{media.title}</h3>
+                      <h3 className="font-bold text-lg truncate text-foreground leading-tight">Download reel</h3>
                       <p className="text-xs text-primary font-black uppercase tracking-widest mt-2 flex items-center gap-1.5">
                         <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                         High Quality Audio
