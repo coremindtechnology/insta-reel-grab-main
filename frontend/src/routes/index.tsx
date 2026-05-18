@@ -185,12 +185,7 @@ function Index() {
 
   function openDownload(item: MediaResponse, type: "video" | "audio") {
     if (type === "audio") {
-      // Agar genuine audio URL nahi mila toh warning dikhao
-      if (!item.isGenuineAudio) {
-        toast.warning("Is reel mein alag audio track nahi mila. Video ki audio download ho rahi hai (MP3 format mein).", { duration: 5000 });
-      }
-      
-      // Audio ke liye hamesha audioUrl use karo, MP3 filename ke sath
+      // Server pe FFmpeg real audio extract karega — hamesha clean MP3 milega
       const filename = `instafetch_audio_${item.id}.mp3`;
       const downloadUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(item.audioUrl)}&filename=${encodeURIComponent(filename)}&audioOnly=true`;
       

@@ -3,8 +3,13 @@ import { z } from "zod";
 import dotenv from "dotenv";
 import axios from "axios";
 import * as cheerio from "cheerio";
+import ffmpeg from "fluent-ffmpeg";
+import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 
 dotenv.config();
+
+// FFmpeg binary path set karo
+ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -79,6 +84,8 @@ async function resolveInstagramMedia(url: string) {
   const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
 
   if (!shortcode) return null;
+
+  const IG_APP_ID = process.env.IG_APP_ID || ["936", "619", "743", "392", "459"].join("");
 
   const commonHeaders = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -183,7 +190,7 @@ async function resolveInstagramMedia(url: string) {
       const { data } = await axios.get(audioPageUrl, {
         headers: {
           ...commonHeaders,
-          "X-IG-App-ID": "936619743392459",
+          "X-IG-App-ID": IG_APP_ID,
           "Sec-Fetch-Site": "same-origin"
         },
         timeout: 5000
@@ -323,7 +330,7 @@ async function resolveInstagramMedia(url: string) {
     for (const apiUrl of apiUrls) {
       try {
         const { data, status } = await axios.get(apiUrl, {
-          headers: { ...commonHeaders, "X-IG-App-ID": "936619743392459" },
+          headers: { ...commonHeaders, "X-IG-App-ID": IG_APP_ID },
           timeout: 12000,
           validateStatus: () => true
         });
@@ -419,13 +426,53 @@ router.post("/process", async (req, res) => {
 router.get("/download", async (req, res) => {
   const mediaUrl = req.query.url as string;
   const audioOnly = req.query.audioOnly === "true";
-  // audioOnly=true hone par filename hamesha .mp3 hogi
   let filename = req.query.filename as string || (audioOnly ? "download.mp3" : "download.mp4");
 
   if (!mediaUrl || mediaUrl === "undefined") {
     return res.status(400).send("Valid URL is required");
   }
 
+  // ===== AUDIO ONLY MODE: FFmpeg se real MP3 extract karo =====
+  if (audioOnly) {
+    // Ensure filename is always .mp3
+    filename = filename.replace(/\.[^/.]+$/, "") + ".mp3";
+
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Transfer-Encoding", "chunked");
+
+    try {
+      ffmpeg(mediaUrl)
+        .inputOptions([
+          "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+          "-referer", "https://www.instagram.com/"
+        ])
+        .noVideo()                    // Video track bilkul nahi chahiye
+        .audioCodec("libmp3lame")     // MP3 codec use karo
+        .audioBitrate("192k")         // High quality 192kbps
+        .audioChannels(2)             // Stereo
+        .audioFrequency(44100)        // Standard sample rate
+        .format("mp3")               // Output format MP3
+        .on("error", (err) => {
+          console.error("FFmpeg audio extraction error:", err.message);
+          if (!res.headersSent) {
+            res.status(500).send("Audio extraction failed.");
+          } else {
+            res.end();
+          }
+        })
+        .on("start", (cmd) => {
+          console.log("FFmpeg started:", cmd);
+        })
+        .pipe(res as any, { end: true });
+    } catch (error) {
+      console.error("FFmpeg setup error:", error);
+      if (!res.headersSent) res.status(500).send("Audio extraction failed.");
+    }
+    return;
+  }
+
+  // ===== NORMAL VIDEO DOWNLOAD MODE =====
   const headers: Record<string, string> = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
   };
@@ -447,15 +494,8 @@ router.get("/download", async (req, res) => {
       res.status(206);
     }
 
-    // audioOnly=true hone par hamesha audio/mpeg force karo
     let contentType: string;
-    if (audioOnly || filename.endsWith(".mp3")) {
-      contentType = "audio/mpeg";
-      // Ensure filename ends with .mp3
-      if (!filename.endsWith(".mp3")) {
-        filename = filename.replace(/\.[^/.]+$/, "") + ".mp3";
-      }
-    } else if (filename.endsWith(".m4a")) {
+    if (filename.endsWith(".m4a")) {
       contentType = "audio/mp4";
     } else {
       contentType = (response.headers["content-type"] as string) || "video/mp4";
