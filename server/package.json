@@ -1,7 +1,7 @@
 {
-  "name": "instafetch-server",
+  "name": "savereelaudio-server",
   "version": "1.0.0",
-  "description": "Backend for InstaFetch",
+  "description": "Backend for SaveReelAudio",
   "main": "api/index.ts",
   "type": "module",
   "scripts": {

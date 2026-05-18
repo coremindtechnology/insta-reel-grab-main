@@ -384,7 +384,7 @@ const router = express.Router();
 
 // Root route for health check
 router.get("/", (req, res) => {
-  res.json({ status: "ok", message: "InstaFetch API is running", version: "1.2.0" });
+  res.json({ status: "ok", message: "SaveReelAudio API is running", version: "1.2.0" });
 });
 
 // Informational GET routes for POST-only endpoints

@@ -186,7 +186,7 @@ function Index() {
   function openDownload(item: MediaResponse, type: "video" | "audio") {
     if (type === "audio") {
       // Server pe FFmpeg real audio extract karega — hamesha clean MP3 milega
-      const filename = `instafetch_audio_${item.id}.mp3`;
+      const filename = `savereelaudio_audio_${item.id}.mp3`;
       const downloadUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(item.audioUrl)}&filename=${encodeURIComponent(filename)}&audioOnly=true`;
       
       const link = document.createElement("a");
@@ -199,7 +199,7 @@ function Index() {
     }
 
     // Video download
-    const filename = `instafetch_${item.id}.mp4`;
+    const filename = `savereelaudio_${item.id}.mp4`;
     const downloadUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(item.videoUrl)}&filename=${encodeURIComponent(filename)}`;
 
     const link = document.createElement("a");
@@ -234,7 +234,7 @@ function Index() {
 
   const handleShare = async () => {
     const shareData = {
-      title: "ReelSave.App - Instagram Downloader",
+      title: "SaveReelAudio - Instagram Downloader",
       text: "Download Instagram Reels and Audio for free in high quality!",
       url: "https://savereelaudio.vercel.app/",
     };
@@ -258,8 +258,7 @@ function Index() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 h-16 flex items-center justify-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
           <div className="flex items-center gap-1 cursor-pointer" onClick={() => window.location.reload()}>
-            <span className="text-xl font-black text-primary">ReelSave</span>
-            <span className="text-xl font-black text-foreground">.App</span>
+            <span className="text-xl font-black text-primary">SaveReelAudio</span>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-6">
@@ -609,7 +608,7 @@ function Index() {
               <div className="text-center space-y-4">
                 <h2 className="text-3xl font-black text-primary">Ways to Download Instagram Audio</h2>
                 <p className="max-w-4xl mx-auto text-muted-foreground">
-                  InstaFetch provides an easy way to extract audio from Instagram Reels. Just follow these simple steps to download MP3s.
+                  SaveReelAudio provides an easy way to extract audio from Instagram Reels. Just follow these simple steps to download MP3s.
                   We guide you with images to make it even easier to understand the process.
                 </p>
               </div>
@@ -631,7 +630,7 @@ function Index() {
                     <img src="/guide/step2.png" alt="Reels Downloader" className="h-full w-full object-cover" />
                   </div>
                   <p className="text-sm leading-relaxed text-muted-foreground px-2">
-                    Paste the link in the InstaFetch Reels Downloader and click search to start processing your request. The Reels downloader will prepare your Reels in seconds.
+                    Paste the link in the SaveReelAudio Reels Downloader and click search to start processing your request. The Reels downloader will prepare your Reels in seconds.
                   </p>
                 </div>
 
@@ -667,7 +666,7 @@ function Index() {
                   Are you looking for the best way to <strong>Download Instagram Audio in High Quality</strong>? You've come to the right place. Our advanced extractor ensures that every MP3 you save is in its best available quality, perfect for listening on any device or using in your own projects.
                 </p>
                 <p>
-                  Unlike many other tools, our system prioritizes audio fidelity. When you use InstaFetch for your <strong>Instagram Reels audio download</strong>, we fetch the highest bit-rate stream available. Whether it's a 128kbps or 320kbps source, you get the clearest audio saved locally on your device.
+                  Unlike many other tools, our system prioritizes audio fidelity. When you use SaveReelAudio for your <strong>Instagram Reels audio download</strong>, we fetch the highest bit-rate stream available. Whether it's a 128kbps or 320kbps source, you get the clearest audio saved locally on your device.
                 </p>
                 <p>
                   The process is completely free and requires no registration. We believe that accessing your favorite audio should be simple and fast. Our servers are optimized to handle extractions in seconds, meaning you don't have to wait around. Just paste the link, and let our engine do the heavy lifting for you.
@@ -694,7 +693,7 @@ function Index() {
               </div>
               <div className="flex gap-5 items-start glass-panel p-5 rounded-2xl border border-border/50">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-app">2</div>
-                <p className="text-foreground leading-relaxed pt-2">Open <span className="font-bold text-primary">InstaFetch</span> for Instagram reels download.</p>
+                <p className="text-foreground leading-relaxed pt-2">Open <span className="font-bold text-primary">SaveReelAudio</span> for Instagram reels download.</p>
               </div>
               <div className="flex gap-5 items-start glass-panel p-5 rounded-2xl border border-border/50">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-app">3</div>
