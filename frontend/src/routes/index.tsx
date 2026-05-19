@@ -359,10 +359,10 @@ function Index() {
       <div className="relative mx-auto flex min-h-[calc(100vh-2.5rem)] w-full flex-col pt-20">
         <section className="flex-1 space-y-8 py-8 lg:py-12 w-full">
           <div className="animate-rise space-y-7 text-center max-w-4xl mx-auto w-full">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-2 text-sm font-medium text-muted-foreground shadow-app backdrop-blur-xl mx-auto">
+            {/* <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-2 text-sm font-medium text-muted-foreground shadow-app backdrop-blur-xl mx-auto">
               <Sparkles className="h-4 w-4 text-primary" />
               Public Reels and Posts only
-            </div>
+            </div> */}
 
             <div className="space-y-4">
               <h1 className="text-4xl font-black leading-tight tracking-normal text-foreground sm:text-5xl lg:text-6xl mx-auto">
