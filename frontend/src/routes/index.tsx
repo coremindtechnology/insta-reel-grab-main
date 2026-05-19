@@ -63,7 +63,7 @@ type MediaResponse = {
   processedAt: string;
 };
 
-const sampleUrl = "https://www.instagram.com/reel/CxYz123abc_/";
+const sampleUrl = "Paste Instagram link...";
 
 function sanitizeInstagramUrl(value: string) {
   const trimmed = value.trim().replace(/[<>"'`]/g, "");
