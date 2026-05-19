@@ -1048,44 +1048,7 @@ function Index() {
             </div>
           </div>
 
-          <div className="mt-24 py-12 border-t border-border/30 animate-rise w-full max-w-7xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-8 text-left">
-              Terms & Conditions
-            </h2>
-            <div className="glass-panel p-8 rounded-3xl border border-border/50 text-left space-y-6">
-              <div className="flex gap-4 items-start">
-                <div className="h-2 w-2 rounded-full bg-primary mt-2 shrink-0"></div>
-                <p className="text-muted-foreground leading-relaxed">
-                  This site is for{" "}
-                  <span className="text-foreground font-semibold">
-                    educational purposes
-                  </span>
-                  . This site is using information that is freely available.
-                </p>
-              </div>
-              <div className="flex gap-4 items-start">
-                <div className="h-2 w-2 rounded-full bg-primary mt-2 shrink-0"></div>
-                <p className="text-muted-foreground leading-relaxed">
-                  This site has not any right of videos or photos in which you
-                  have downloaded the only right of respected users and all the
-                  copyright and trademark goes to them.
-                </p>
-              </div>
-              <div className="flex gap-4 items-start">
-                <div className="h-2 w-2 rounded-full bg-primary mt-2 shrink-0"></div>
-                <p className="text-muted-foreground leading-relaxed">
-                  <span className="text-foreground font-semibold">
-                    Instagram
-                  </span>{" "}
-                  and{" "}
-                  <span className="text-foreground font-semibold">
-                    Instagram logos
-                  </span>{" "}
-                  are trademark and copyright of Facebook Inc.
-                </p>
-              </div>
-            </div>
-          </div>
+
         </section>
 
         <footer className="mt-16 border-t border-border/30 bg-background/30 backdrop-blur-xl py-10 w-full">
