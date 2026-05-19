@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertCircle,
   CheckCircle2,
@@ -1088,8 +1088,57 @@ function Index() {
           </div>
         </section>
 
-        <footer className="py-4 text-center text-sm text-muted-foreground max-w-4xl mx-auto w-full">
-          Made with ❤️
+        <footer className="mt-16 border-t border-border/30 bg-background/30 backdrop-blur-xl py-10 w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div
+                className="flex items-center gap-1 cursor-pointer"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
+                <span className="text-xl font-black text-primary">
+                  SaveReelAudio
+                  <span className="text-black dark:text-white">.App</span>
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-sm font-bold">
+                <Link
+                  to="/privacy"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  to="/terms"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Terms & Conditions
+                </Link>
+                <Link
+                  to="/contact"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </div>
+
+            <hr className="my-6 border-border/20 w-full" />
+
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="text-xs text-muted-foreground max-w-4xl leading-relaxed text-center md:text-left">
+                <span className="font-bold text-foreground">
+                  SaveReelAudio.App
+                </span>{" "}
+                is not affiliated with Instagram™ and we do not host any of the
+                media on our servers. All the media content is delivered through
+                its original source and belongs to their respective owners.
+              </p>
+              <p className="text-xs text-muted-foreground shrink-0 text-center">
+                &copy; 2020-2026 SaveReelAudio - All Rights Reserved.
+              </p>
+            </div>
+          </div>
         </footer>
       </div>
     </main>
