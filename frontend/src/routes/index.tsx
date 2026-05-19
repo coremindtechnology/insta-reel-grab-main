@@ -28,23 +28,60 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:3001")
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Instagram Audio Downloader - Save MP3 from Reels" },
+      {
+        title:
+          "Instagram Audio Downloader | Extract & Download Reels Audio to MP3",
+      },
+      {
+        name: "keywords",
+        content: "Instagram reel downloader, Instagram video downloader, Instagram audio downloader, reel download, Insta reel saver, Instagram MP3 download, download Instagram reels, HD reel downloader, Instagram music downloader, Insta video save, reel to MP3, Instagram downloader online, fast reel downloader, free Instagram downloader, social media downloader, reel video download, audio extractor, Instagram content saver, online reel downloader, sky blue downloader app",
+      },
       {
         name: "description",
         content:
-          "Download and extract high-quality MP3 audio from any Instagram Reel or Post. Fast, free, and easy to use.",
+          "Free online Instagram Audio Downloader to extract high-quality MP3 from Instagram Reels, Videos, and Posts. No registration required. Fast, free, and secure.",
       },
-      { property: "og:title", content: "Instagram Audio Downloader" },
+      {
+        name: "keywords",
+        content:
+          "instagram audio downloader, instagram mp3 downloader, instagram reels audio download, download instagram audio, extract audio from instagram, save instagram audio, ig audio downloader, instagram audio download, reels to mp3 converter, instagram to mp3, download ig audio mp3, save reel audio, instagram reel audio extract, reels audio saver, ig video to mp3, instagram sound downloader, save instagram sound, download instagram bgm, instagram background music download, extract sound from reels, savereelaudio, download sound from instagram, audio saver for instagram",
+      },
+      {
+        name: "robots",
+        content:
+          "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
+      { property: "og:type", content: "website" },
+      {
+        property: "og:title",
+        content: "Instagram Audio Downloader - Extract Reels Audio to MP3",
+      },
       {
         property: "og:description",
         content:
-          "Extract high-quality MP3 audio from Instagram Reels and Posts with one click.",
+          "Easily extract and download high-quality MP3 audio from any Instagram Reel or Post online in one click.",
       },
-      { name: "twitter:title", content: "Instagram Audio Downloader" },
+      { property: "og:url", content: "https://savereelaudio.vercel.app/" },
+      { property: "og:site_name", content: "SaveReelAudio" },
+      {
+        property: "og:image",
+        content: "https://savereelaudio.vercel.app/images/promo.png",
+      },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:title",
+        content: "Instagram Audio Downloader - Reels to MP3 Converter",
+      },
       {
         name: "twitter:description",
         content:
-          "Extract high-quality MP3 audio from Instagram Reels and Posts with one click.",
+          "Download and extract high-quality MP3 audio from Instagram Reels and Posts online for free.",
+      },
+      {
+        name: "twitter:image",
+        content: "https://savereelaudio.vercel.app/images/promo.png",
       },
     ],
     links: [
@@ -53,7 +90,28 @@ export const Route = createFileRoute("/")({
         href: "/logo_1.png",
         type: "image/png",
         sizes: "any",
-      }
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "SaveReelAudio",
+          url: "https://savereelaudio.vercel.app/",
+          description:
+            "Free online Instagram Audio Downloader to extract high-quality MP3 from Instagram Reels, Videos, and Posts.",
+          applicationCategory: "MultimediaApplication",
+          operatingSystem: "All",
+          browserRequirements: "Requires HTML5 compatible browser",
+          offers: {
+            "@type": "Offer",
+            price: "0.00",
+            priceCurrency: "USD",
+          },
+        }),
+      },
     ],
   }),
   component: Index,
