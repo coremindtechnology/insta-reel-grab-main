@@ -402,11 +402,11 @@ function Index() {
                   </button>
                 </div>
               </div>
-
+              {/* 
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-primary" />
                 Paste links like instagram.com/reel/... or instagram.com/p/...
-              </div>
+              </div> */}
 
               {error ? (
                 <div className="mt-4 flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
