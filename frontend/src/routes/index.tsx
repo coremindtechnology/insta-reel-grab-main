@@ -47,7 +47,20 @@ export const Route = createFileRoute("/")({
           "Extract high-quality MP3 audio from Instagram Reels and Posts with one click.",
       },
     ],
-    links: [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }],
+    links: [
+      {
+        rel: "icon",
+        href: "/logo_1.png",
+        type: "image/png",
+        sizes: "any",
+      },
+      {
+        rel: "icon",
+        href: "/logo_1.svg",
+        type: "image/svg+xml",
+        sizes: "any",
+      },
+    ],
   }),
   component: Index,
 });
