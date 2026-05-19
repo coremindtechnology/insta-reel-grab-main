@@ -287,6 +287,7 @@ function Index() {
           >
             <span className="text-xl font-black text-primary">
               SaveReelAudio
+              <span className="text-black dark:text-white">.App</span>
             </span>
           </div>
 
