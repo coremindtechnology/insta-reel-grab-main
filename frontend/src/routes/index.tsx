@@ -53,13 +53,7 @@ export const Route = createFileRoute("/")({
         href: "/logo_1.png",
         type: "image/png",
         sizes: "any",
-      },
-      {
-        rel: "icon",
-        href: "/logo_1.svg",
-        type: "image/svg+xml",
-        sizes: "any",
-      },
+      }
     ],
   }),
   component: Index,
