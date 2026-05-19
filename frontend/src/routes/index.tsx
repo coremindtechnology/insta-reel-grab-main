@@ -20,6 +20,12 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:3001")
   .trim()
@@ -1048,7 +1054,110 @@ function Index() {
             </div>
           </div>
 
+          <div className="mt-24 py-12 border-t border-border/30 animate-rise w-full max-w-7xl mx-auto">
+            <div className="text-center space-y-4 mb-12">
+              <h2 className="text-3xl sm:text-4xl font-black text-foreground">
+                Instagram Reels Downloader FAQs
+              </h2>
+              <p className="max-w-2xl mx-auto text-muted-foreground">
+                Got questions? We've got answers. Here are the most frequently asked questions about SaveReelAudio.App.
+              </p>
+            </div>
 
+            <div className="glass-panel p-6 sm:p-10 rounded-3xl border border-border/50 max-w-4xl mx-auto">
+              <Accordion type="single" collapsible className="w-full space-y-2">
+                <AccordionItem value="faq-1" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4">
+                    1. What is an Instagram Reels Downloader?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    An Instagram Reels Downloader is an online tool that allows users to download Instagram Reels videos for offline viewing. It helps you save your favorite Reels content directly to your device.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-2" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    2. Is it legal to download Instagram Reels using a downloader?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    The legality of downloading Instagram Reels depends on the terms of use set by Instagram. Generally, downloading content for personal use is acceptable, but redistributing without permission may infringe on copyright. Always respect the terms and conditions of the platform.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-3" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    3. How do I use the Instagram Reels Downloader?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    Simply copy the link of the Instagram Reels video you want to download and paste it into the provided field on our website. Click the download button, and the video will be saved to your device.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-4" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    4. Does the Instagram Reels Downloader work on mobile devices?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    Yes, our downloader is designed to work on both desktop and mobile devices. You can access the website from your smartphone or tablet to download Instagram Reels videos.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-5" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    5. Are there any limitations on the number of downloads?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    Our service is generally free to use, but there might be limitations on the number of downloads per user to ensure fair usage. Check our website for any specific restrictions or consider reaching out to our support team for more information.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-6" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    6. Can I download Instagram Reels in high quality?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    The quality of the downloaded Reels video depends on the original upload. Our downloader provides the video in the same quality as available on Instagram. For higher quality, make sure the original Reels video is uploaded in HD.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-7" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    7. Is it safe to use an Instagram Reels Downloader?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    Our website prioritizes user privacy and security. We do not store any personal information, login details, or downloaded content. However, always be cautious and use reliable services to avoid potential risks.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-8" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    8. Do I need to install any software to use the Instagram Reels Downloader?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    No, our downloader is an online tool that does not require any software installation. You can use it directly from your web browser.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-9" className="border-b border-border/30 px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    9. What should I do if the Instagram Reels Downloader is not working?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    If you encounter any issues, check your internet connection and make sure you are using the correct link. If problems persist, contact our support team for assistance.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-10" className="border-none px-2 py-1">
+                  <AccordionTrigger className="text-base font-bold text-foreground hover:no-underline hover:text-primary transition-colors py-4 text-left">
+                    10. Can I share the downloaded Instagram Reels videos on other platforms?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2 pb-4 text-sm sm:text-base text-left">
+                    While you can download Reels for personal use, respect copyright and intellectual property rights. Avoid redistributing content without the creator's permission, as this may violate Instagram's terms and copyright laws.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
         </section>
 
         <footer className="mt-16 border-t border-border/30 bg-background/30 backdrop-blur-xl py-10 w-full">
