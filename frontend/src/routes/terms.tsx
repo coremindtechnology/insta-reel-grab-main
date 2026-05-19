@@ -63,7 +63,7 @@ function TermsComponent() {
       {/* Background Aurora Effect */}
       <div className="aurora-field pointer-events-none absolute left-1/2 top-0 h-72 w-[70rem] -translate-x-1/2 rounded-full opacity-80" />
 
-      <div className="relative mx-auto max-w-7xl w-full pt-20 pb-10 flex-grow">
+      <div className="relative mx-auto max-w-none w-full pt-20 pb-10 flex-grow px-2 sm:px-6 lg:px-8">
         {/* Content Card (Full Width) */}
         <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-border/50 space-y-8 shadow-app-lg mt-10 w-full">
           <div className="flex items-center gap-4 border-b border-border/30 pb-6">
@@ -74,9 +74,6 @@ function TermsComponent() {
               <h1 className="text-3xl font-black text-foreground">
                 Terms & Conditions
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Last updated: May 20, 2026
-              </p>
             </div>
           </div>
 
