@@ -4,6 +4,17 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/privacy")({
+  head: () => ({
+    meta: [
+      { title: "Privacy Policy | SaveReelAudio" },
+      {
+        name: "description",
+        content:
+          "Read the Privacy Policy of SaveReelAudio. Learn how we handle logs, cookies, and advertisements while you use our Instagram Reels downloader.",
+      },
+      { name: "robots", content: "noindex, follow" },
+    ],
+  }),
   component: PrivacyComponent,
 });
 

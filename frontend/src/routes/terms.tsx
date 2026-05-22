@@ -4,6 +4,17 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/terms")({
+  head: () => ({
+    meta: [
+      { title: "Terms & Conditions | SaveReelAudio" },
+      {
+        name: "description",
+        content:
+          "Read the Terms & Conditions for using SaveReelAudio. Learn about cookies, intellectual property, and usage limitations of our free online media downloader.",
+      },
+      { name: "robots", content: "noindex, follow" },
+    ],
+  }),
   component: TermsComponent,
 });
 

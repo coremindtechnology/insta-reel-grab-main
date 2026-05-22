@@ -6,6 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/contact")({
+  head: () => ({
+    meta: [
+      { title: "Contact Us | SaveReelAudio" },
+      {
+        name: "description",
+        content:
+          "Get in touch with SaveReelAudio support for ads, DMCA copyright takedown requests, feedback, or inquiries regarding our Instagram Reels downloader.",
+      },
+      {
+        name: "keywords",
+        content:
+          "contact savereelaudio, instagram downloader support, savereelaudio help, dmca request",
+      },
+      { name: "robots", content: "noindex, follow" },
+    ],
+  }),
   component: ContactComponent,
 });
 
